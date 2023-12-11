@@ -1,0 +1,215 @@
+from dataclasses import dataclass
+from datetime import datetime
+from enum import Enum, unique
+
+from typeguard import typechecked
+
+from validation.dataclasses import validate_dataclass
+from valid8 import validate
+
+from validation.regex import pattern
+
+
+@typechecked
+@dataclass(frozen=True, order=True)
+class Title:
+    value: str
+
+    def __post_init__(self):
+        validate_dataclass(self)
+        validate('value', self.value, min_len=1, max_len=50, custom=pattern(r'^[\w\d]+(\s[\w\d]+)*$'),
+                 help_msg="Title must be between 1 and 50 characters long.")
+
+    def __str__(self):
+        return self.value
+
+
+@typechecked
+@dataclass(frozen=True, order=True)
+class Description:
+    value: str
+
+    def __post_init__(self):
+        validate_dataclass(self)
+        validate('value', self.value, min_len=1, max_len=200, custom=pattern(r'^[\w\d]+(\s[\w\d]+)*$'),
+                 help_msg="Description must be between 1 and 200 characters long.")
+
+    def __str__(self):
+        return self.value
+
+
+@typechecked
+@dataclass(frozen=True, order=True)
+class Year:
+    value: int
+
+    def __post_init__(self):
+        validate_dataclass(self)
+        validate('value', self.value, min_value=1900, max_value=datetime.now().year,
+                 help_msg="Year must be between 1900 and current year.")
+
+    def __str__(self):
+        return str(self.value)
+
+
+@typechecked
+@dataclass(frozen=True)
+class Id:
+    value: int
+
+    def __post_init__(self):
+        validate_dataclass(self)
+        validate('id', self.value, min_value=0, help_msg='Id must be an integer greater than or equal to 0.')
+
+    def __str__(self) -> str:
+        return str(self.value)
+
+
+@typechecked
+@dataclass(frozen=True, order=True)
+class Category:
+    @unique  # Enum class decorator that ensures only one name is bound to any one value.
+    class MovieCategory(Enum):
+        ROMANCE = "ROMANCE",
+        ACTION = "ACTION",
+        ADVENTURE = "ADVENTURE",
+        COMEDY = "COMEDY"
+        CRIME = "CRIME"
+        DRAMA = "DRAMA"
+        FANTASY = "FANTASY"
+        HISTORICAL = "HISTORICAL"
+        HORROR = "HORROR"
+        MYSTERY = "MYSTERY"
+        PSYCHOLOGICAL = "PSYCHOLOGICAL"
+        SCIENCE_FICTION = "SCIENCE_FICTION"
+        THRILLER = "THRILLER"
+        WESTERN = "WESTERN"
+
+    value: MovieCategory
+
+    def __post_init__(self):
+        validate_dataclass(self)
+        validate('value', self.value, custom=self._is_a_valid_category,
+                 help_msg="Category must be chosen from the provided list.")
+
+    def __str__(self) -> str:
+        return self.value.name
+
+    # todo: da testare
+    @typechecked
+    def _is_a_valid_category(self, value) -> bool:
+        return value in self.MovieCategory.__members__.values()
+
+
+@typechecked
+@dataclass(frozen=True, order=True)
+class Director:
+    value: str
+
+    def __post_init__(self):
+        validate_dataclass(self)
+        validate('value', self.value, min_len=3, max_len=100, custom=pattern(r'^[a-zA-Z]+(\s[a-zA-Z]+\'?[a-zA-Z]*)*$'),
+                 help_msg="Director name an surname must be between 1 and 50 characters long, and"
+                          "can contain only letters and \"'\".")
+
+    def __str__(self) -> str:
+        return self.value
+
+
+@typechecked
+@dataclass(frozen=True, order=True)
+class Movie:
+    id: Id
+    title: Title
+    description: Description
+    year: Year
+    category: Category
+    director: Director
+
+    def __post_init__(self):
+        validate_dataclass(self)
+
+    @property
+    def type(self) -> str:
+        return 'MOVIE'
+
+    def __str__(self) -> str:
+        return (f"Id: {self.id}\n"
+                f"Title: {self.title}\n"
+                f"Description: {self.description}\n"
+                f"Year: {self.year}\n"
+                f"Category: {self.category}\n")
+
+
+@typechecked
+@dataclass(frozen=True, order=True)
+class Like:
+    user_id: Id
+    movie: Movie
+
+    def __post_init__(self):
+        validate_dataclass(self)
+
+    def __str__(self):
+        return (f"User ID: {self.user_id}\n"
+                f"Movie: {self.movie.title}\n")
+
+
+@typechecked
+@dataclass(frozen=True, order=True)
+class Email:
+    value: str
+
+    def __post_init__(self):
+        validate_dataclass(self)
+        validate('value', self.value, max_len=200, custom=pattern(r'^[\w\d\.]+@\w+\.\w+$'),
+                 help_msg="Email must be a valid email address.")
+
+    def __str__(self):
+        return str(self.value)
+
+
+@typechecked
+@dataclass(frozen=True)
+class Password:
+    value: str
+
+    def __post_init__(self):
+        validate_dataclass(self)
+        validate('value', self.value, min_len=8, max_len=30, custom=lambda res: self._is_valid(self.value),
+                 help_msg="Password must be between 8 and 30 characters long and contain at least one uppercase letter,"
+                          "one lowercase letter, one number and one special character.")
+
+    def __str__(self):
+        return str(self.value)
+
+    @staticmethod
+    def _is_valid(value) -> bool:
+        # no lowercase
+        if not any(c.islower() for c in value):
+            return False
+        # no uppercase
+        if not any(c.isupper() for c in value):
+            return False
+        # no number
+        if not any(c.isdigit() for c in value):
+            return False
+        # no special character
+        if not any(not c.isalnum() for c in value):
+            return False
+        return True
+
+
+@typechecked
+@dataclass(frozen=True, order=True)
+class Username:
+    value: str
+
+    def __post_init__(self):
+        validate_dataclass(self)
+        validate('value', self.value, min_len=1, max_len=30, custom=pattern(r'^[\w\d_]+$'),
+                 help_msg="Username must be between 1 and 30 characters long, and can contain letters, "
+                          "numbers and underscores (_).")
+
+    def __str__(self):
+        return str(self.value)
