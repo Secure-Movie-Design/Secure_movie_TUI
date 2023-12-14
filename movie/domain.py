@@ -1,12 +1,12 @@
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum, unique
+import requests
 
 from typeguard import typechecked
 
 from validation.dataclasses import validate_dataclass
 from valid8 import validate
-
 from validation.regex import pattern
 
 
@@ -105,6 +105,7 @@ class Category:
 @dataclass(frozen=True, order=True)
 class Director:
     value: str
+
 
     def __post_init__(self):
         validate_dataclass(self)
@@ -213,3 +214,52 @@ class Username:
 
     def __str__(self):
         return str(self.value)
+    
+@typechecked
+@dataclass(frozen=True)
+class MovieDealer:
+    __api_server = 'http://localhost:8000/api/v1'
+
+    @typechecked
+    def sign_up(self, username: Username, email: Email, password: Password, confirm_password: Password):
+        validate("signup.username",username)
+        validate("signup.email",email)
+        validate("signup.password",password)
+        validate("signup.confirmPassword",confirm_password)
+
+        if password.value != confirm_password.value:
+            return "The two passwords are not the same."
+
+        my_data = {
+            'username': username.value,
+            'email': email.value,
+            'password1': password.value,
+            'password2': confirm_password.value
+        }
+        res = requests.post(url=f'{self.__api_server}/auth/registration', data=my_data)
+        if res.status_code != 204:
+            return "Something went wrong during user registration"
+        else:
+            return f'Welcome in our app, {username.value}!'
+
+    @typechecked
+    def login(self, username: Username, password: Password) -> str | None:
+        validate("login.username", username)
+        validate("login.password", password)
+        res = requests.post(url=f'{self.__api_server}/auth/login/',
+                            data={'username': username.value, 'password': password.value})
+        if res.status_code != 200:
+            return None
+        _json = res.json()
+        return _json['key']
+        
+    
+    @typechecked
+    def logout(self, key: str):
+        res = requests.post(url=f'{self.__api_server}/auth/logout/', headers={'Authorization': f'Token {key}'})
+        if res.status_code == 200:
+            return 'Logged out!'
+        else:
+            return 'Logout failed!'
+
+    
