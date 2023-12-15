@@ -268,3 +268,13 @@ class MovieDealer:
             return True
         else:
             return False
+
+    @typechecked
+    def add_like(self, key: str, movie_id: Id) -> bool:
+        res = requests.post(url=f'{self.__api_server}/likes/',
+                            headers={'Authorization': f'Token {key}'},
+                            data={'movie': movie_id.value})
+        if res.status_code == 201:
+            return True
+        else:
+            return False

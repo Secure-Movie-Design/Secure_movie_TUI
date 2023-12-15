@@ -3,7 +3,7 @@ from typing import Any, Callable
 from typeguard import typechecked
 from valid8 import ValidationError
 from movie.menu import Entry, Menu, Description
-from movie.domain import Email, Movie, MovieDealer, Password, Username
+from movie.domain import Email, Movie, MovieDealer, Password, Username, Id
 
 
 # implementare add_like
@@ -33,7 +33,6 @@ class App:
         self.__film_dealer = MovieDealer()
         self.__token = None
 
-
     def __sign_up(self):
         username = self.__read_from_input("insert username", Username)
         email = self.__read_from_input("insert email", Email)
@@ -57,7 +56,17 @@ class App:
         print("Logged successfully!")
 
     def __addLike(self):
-        pass
+        if not self.__is_logged():
+            print("You must be logged to add like!")
+            return
+
+        movie_id = self.__read_from_input("insert movie id", Id, to_convert=True)
+        result = self.__film_dealer.add_like(self.__token, movie_id)
+
+        if result:
+            print("Like added successfully!")
+        else:
+            print(f"Couldn't like the movie with id {movie_id}...")
 
     def __removeLike(self):
         pass

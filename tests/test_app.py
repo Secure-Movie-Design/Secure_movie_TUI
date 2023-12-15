@@ -30,7 +30,7 @@ def test_main(mock_print, mock_input):
     mock_print.assert_called()
 
 
-# SIGN IN OPERATION TEST
+# SIGN UP OPERATION TEST
 @patch('builtins.input', side_effect=['1', 'username', 'test@email.it', '0'])
 @patch('builtins.print')
 def test_signup_password_not_match(mock_print, mock_input, app):
@@ -109,9 +109,9 @@ def test_login_fail(mock_print, mock_input, app):
             mock_print.assert_any_call('Login failed!')
 
 
-# todo:
-# test logout token diventa none quando logout è successful
-@patch('builtins.input', side_effect=['2', 'username', '8', '0'])    # login -> logout -> terminazione programma
+# LOGOUT OPERATION TEST
+
+@patch('builtins.input', side_effect=['2', 'username', '8', '0'])  # login -> logout -> terminazione programma
 @patch('builtins.print')
 def test_logout_prints_correctly_when_logout_successful(mock_print, mock_input, app):
     with patch.object(MovieDealer, 'logout', return_value=True) as logout:
@@ -122,8 +122,7 @@ def test_logout_prints_correctly_when_logout_successful(mock_print, mock_input, 
                 mock_print.assert_called()
 
 
-# test logout printa "You must be logged to logout!" quando non sei loggato e provi a fare il logout
-@patch('builtins.input', side_effect=['8', '0'])    # logout -> terminazione programma
+@patch('builtins.input', side_effect=['8', '0'])  # logout -> terminazione programma
 @patch('builtins.print')
 def test_logout_prints_correctly_when_not_logged_in(mock_print, mock_input, app):
     app.run()
@@ -131,8 +130,7 @@ def test_logout_prints_correctly_when_not_logged_in(mock_print, mock_input, app)
     mock_print.assert_called()
 
 
-# test logout printa "Logout failed!" quando il logout fallisce (status code != 200)
-@patch('builtins.input', side_effect=['2', 'username', '8', '0'])    # login -> logout -> terminazione programma
+@patch('builtins.input', side_effect=['2', 'username', '8', '0'])  # login -> logout -> terminazione programma
 @patch('builtins.print')
 def test_logout_prints_correctly_when_logout_fails(mock_print, mock_input, app):
     with patch.object(MovieDealer, 'logout', return_value=False) as logout:
@@ -143,3 +141,33 @@ def test_logout_prints_correctly_when_logout_fails(mock_print, mock_input, app):
                 mock_print.assert_called()
 
 
+# ADD LIKE OPERATION TEST
+
+@patch('builtins.input', side_effect=['3', '0'])  # add like -> id movie -> terminazione programma
+@patch('builtins.print')
+def test_add_like_prints_correctly_when_not_logged_in(mock_print, mock_input, app):
+    app.run()
+    mock_print.assert_any_call("You must be logged to add like!")
+    mock_print.assert_called()
+
+
+@patch('builtins.input', side_effect=['2', 'username', '3', '1', '0'])  # login -> username -> add like -> movie id -> terminazione programma
+@patch('builtins.print')
+def test_add_like_prints_correctly_when_successful(mock_print, mock_input, app):
+    with patch.object(MovieDealer, 'login', return_value="token") as login:
+        with patch('getpass.getpass', side_effect=['Password43210wewe?']) as password:
+            with patch.object(MovieDealer, 'add_like', return_value=True) as add_like:
+                app.run()
+                mock_print.assert_any_call("Like added successfully!")
+                mock_print.assert_called()
+
+
+@patch('builtins.input', side_effect=['2', 'username', '3', '1', '0'])  # login -> username -> add like -> movie id -> terminazione programma
+@patch('builtins.print')
+def test_add_like_prints_correctly_when_unsuccessful(mock_print, mock_input, app):
+    with patch.object(MovieDealer, 'login', return_value="token") as login:
+        with patch('getpass.getpass', side_effect=['Password43210wewe?']) as password:
+            with patch.object(MovieDealer, 'add_like', return_value=False) as add_like:
+                app.run()
+                mock_print.assert_any_call(f"Couldn't like the movie with id 1...")
+                mock_print.assert_called()
