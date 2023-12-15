@@ -33,6 +33,7 @@ class App:
         self.__film_dealer = MovieDealer()
         self.__token = None
 
+
     def __sign_up(self):
         username = self.__read_from_input("insert username", Username)
         email = self.__read_from_input("insert email", Email)
@@ -61,8 +62,18 @@ class App:
     def __removeLike(self):
         pass
 
+    # todo: test
     def __logout(self):
-        pass
+        if not self.__is_logged():
+            print("You must be logged to logout!")
+            return
+
+        result = self.__film_dealer.logout(self.__token)
+        if result:
+            print("Logout successful!")
+            self.__token = None
+        else:
+            print("Logout failed!")
 
     @typechecked
     def __read_from_input(self, prompt: str, builder: Callable, password: bool = False,

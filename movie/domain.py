@@ -262,9 +262,9 @@ class MovieDealer:
         return _json['key']
 
     @typechecked
-    def logout(self, key: str):
+    def logout(self, key: str) -> bool:
         res = requests.post(url=f'{self.__api_server}/auth/logout/', headers={'Authorization': f'Token {key}'})
         if res.status_code == 200:
-            return 'Logged out!'
+            return True
         else:
-            return 'Logout failed!'
+            return False

@@ -111,5 +111,35 @@ def test_login_fail(mock_print, mock_input, app):
 
 # todo:
 # test logout token diventa none quando logout è successful
+@patch('builtins.input', side_effect=['2', 'username', '8', '0'])    # login -> logout -> terminazione programma
+@patch('builtins.print')
+def test_logout_prints_correctly_when_logout_successful(mock_print, mock_input, app):
+    with patch.object(MovieDealer, 'logout', return_value=True) as logout:
+        with patch.object(MovieDealer, 'login', return_value="token") as login:
+            with patch('getpass.getpass', side_effect=['Password43210wewe?']) as password:
+                app.run()
+                mock_print.assert_any_call('Logout successful!')
+                mock_print.assert_called()
+
+
 # test logout printa "You must be logged to logout!" quando non sei loggato e provi a fare il logout
+@patch('builtins.input', side_effect=['8', '0'])    # logout -> terminazione programma
+@patch('builtins.print')
+def test_logout_prints_correctly_when_not_logged_in(mock_print, mock_input, app):
+    app.run()
+    mock_print.assert_any_call('You must be logged to logout!')
+    mock_print.assert_called()
+
+
 # test logout printa "Logout failed!" quando il logout fallisce (status code != 200)
+@patch('builtins.input', side_effect=['2', 'username', '8', '0'])    # login -> logout -> terminazione programma
+@patch('builtins.print')
+def test_logout_prints_correctly_when_logout_fails(mock_print, mock_input, app):
+    with patch.object(MovieDealer, 'logout', return_value=False) as logout:
+        with patch.object(MovieDealer, 'login', return_value="token") as login:
+            with patch('getpass.getpass', side_effect=['Password43210wewe?']) as password:
+                app.run()
+                mock_print.assert_any_call("Logout failed!")
+                mock_print.assert_called()
+
+
