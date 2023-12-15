@@ -171,3 +171,34 @@ def test_add_like_prints_correctly_when_unsuccessful(mock_print, mock_input, app
                 app.run()
                 mock_print.assert_any_call(f"Couldn't like the movie with id 1...")
                 mock_print.assert_called()
+
+
+# REMOVE LIKE OPERATION TEST
+@patch('builtins.input', side_effect=['4', '0'])  # remove like -> id movie -> terminazione programma
+@patch('builtins.print')
+def test_remove_like_prints_correctly_when_not_logged_in(mock_print, mock_input, app):
+    app.run()
+    mock_print.assert_any_call("You must be logged to remove like!")
+    mock_print.assert_called()
+
+
+@patch('builtins.input', side_effect=['2', 'username', '4', '1', '0'])  # login -> username -> remove like -> movie id -> terminazione programma
+@patch('builtins.print')
+def test_remove_like_prints_correctly_when_successful(mock_print, mock_input, app):
+    with patch.object(MovieDealer, 'login', return_value="token") as login:
+        with patch('getpass.getpass', side_effect=['Password43210wewe?']) as password:
+            with patch.object(MovieDealer, 'remove_like', return_value=True) as remove_like:
+                app.run()
+                mock_print.assert_any_call("Like removed successfully!")
+                mock_print.assert_called()
+
+
+@patch('builtins.input', side_effect=['2', 'username', '4', '1', '0'])  # login -> username -> remove like -> movie id -> terminazione programma
+@patch('builtins.print')
+def test_remove_like_prints_correctly_when_unsuccessful(mock_print, mock_input, app):
+    with patch.object(MovieDealer, 'login', return_value="token") as login:
+        with patch('getpass.getpass', side_effect=['Password43210wewe?']) as password:
+            with patch.object(MovieDealer, 'remove_like', return_value=False) as remove_like:
+                app.run()
+                mock_print.assert_any_call(f"Couldn't remove like to the movie with id 1...")
+                mock_print.assert_called()

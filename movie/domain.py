@@ -278,3 +278,12 @@ class MovieDealer:
             return True
         else:
             return False
+
+    @typechecked
+    def remove_like(self, key: str, movie_id: Id) -> bool:
+        res = requests.delete(url=f'{self.__api_server}/likes/by_movie/{movie_id.value}/',
+                              headers={'Authorization': f'Token {key}'})
+        if res.status_code == 204:
+            return True
+        else:
+            return False
