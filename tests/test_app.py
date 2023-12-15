@@ -18,9 +18,25 @@ def app():
     yield App()
 
 
-def test_read_from_input_validation_error():
-    pass
 
+@patch('builtins.input', side_effect=['1', 'username', 'emailwrong','email@libero.it', '0'])
+@patch('builtins.print')
+def test_read_input_validation_error(mock_print, mock_input, app):
+    with patch('getpass.getpass', side_effect=['Password43210wewe?', 'Password43210wewe!']) as password:
+        app.run()
+        mock_print.assert_any_call("Invalid insert email.\n Email must be a valid email address.")
+        mock_print.assert_called()
+
+
+@patch('builtins.input', side_effect=['2', 'username', '4', 'notanumber','1', '0'])  # login -> username -> remove like -> movie id -> terminazione programma
+@patch('builtins.print')
+def test_read_input_type_error(mock_print, mock_input, app):
+    with patch('getpass.getpass', side_effect=['Password43210wewe?']) as password:
+        with patch.object(MovieDealer, 'login', return_value="token") as login:
+            with patch.object(MovieDealer, 'remove_like', return_value=True) as remove_like:
+                app.run()
+                mock_print.assert_any_call("Invalid value type.")
+                mock_print.assert_called()
 
 @patch('builtins.input', side_effect=['0'])
 @patch('builtins.print')

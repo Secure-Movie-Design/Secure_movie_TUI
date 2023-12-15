@@ -110,7 +110,7 @@ class App:
             except ValidationError as e:
                 self.__error(f'Invalid {prompt}.\n {e.help_msg}')
             except (TypeError, ValueError) as e:
-                self.__error(f'Invalid {prompt}.\n {e}')
+                self.__error(f'Invalid value type.')
 
     @staticmethod
     @typechecked
