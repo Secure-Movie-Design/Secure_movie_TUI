@@ -81,7 +81,6 @@ class App:
         else:
             print(f"Couldn't remove like to the movie with id {movie_id}...")
 
-    # todo: test
     def __logout(self):
         if not self.__is_logged():
             print("You must be logged to logout!")

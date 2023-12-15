@@ -1,9 +1,13 @@
 from datetime import datetime
+from unittest.mock import patch
 
 import pytest
 
-from movie.domain import Title, Description, Year, Category, Movie, Like, Email, Id, Password, Username, Director
+from movie.domain import Title, Description, Year, Category, Movie, Like, Email, Id, Password, Username, Director, \
+    MovieDealer
 from valid8 import ValidationError
+import requests_mock
+from requests.exceptions import ConnectionError
 
 
 @pytest.fixture()
@@ -50,7 +54,6 @@ def test_title_str():
 def test_null_title_raises_exception():
     with pytest.raises(TypeError):
         Title(None)
-
 
 
 ### Description ###
@@ -163,16 +166,16 @@ def test_null_category_raises_exception():
 ### Director ###
 
 @pytest.mark.parametrize('values', [
-    'AA',           # too short
-    'A' * 101,      # too long
-    'A dir&ctor',   # special character
-    'A d1rector',   # number
-    'A director with an ending space ',     # ending space
-    ' A director with a starting space',    # starting space
-    'A director with a double  space',      # double space
-    "A director with an invalid '",         # ' with space after
-    "An 'invalid director",                 # ' with space before
-    'A d1irector',                          # number
+    'AA',  # too short
+    'A' * 101,  # too long
+    'A dir&ctor',  # special character
+    'A d1rector',  # number
+    'A director with an ending space ',  # ending space
+    ' A director with a starting space',  # starting space
+    'A director with a double  space',  # double space
+    "A director with an invalid '",  # ' with space after
+    "An 'invalid director",  # ' with space before
+    'A d1irector',  # number
 ])
 def test_invalid_director_raises_exception(values):
     with pytest.raises(ValidationError):
@@ -274,12 +277,12 @@ def test_email_str():
 
 @pytest.mark.parametrize('values', [
     '',
-    'a' * 7,        # too short
-    'a' * 31,       # too long
-    'a1@bcdefgh',   # no uppercase
-    'A1@BCDEFGH',   # no lowercase
-    'aA@bcdefgh',   # no number
-    'aA1bcdefgh',   # no special character
+    'a' * 7,  # too short
+    'a' * 31,  # too long
+    'a1@bcdefgh',  # no uppercase
+    'A1@BCDEFGH',  # no lowercase
+    'aA@bcdefgh',  # no number
+    'aA1bcdefgh',  # no special character
 ])
 def test_invalid_password_raises_exception(values):
     with pytest.raises(ValidationError):
@@ -316,9 +319,9 @@ def test_invalid_password_type_raises_exception(values):
 
 @pytest.mark.parametrize('values', [
     '',
-    'a' * 31,       # too long
-    'a b',          # space
-    'a-b',          # dash
+    'a' * 31,  # too long
+    'a b',  # space
+    'a-b',  # dash
 ])
 def test_invalid_username_raises_exception(values):
     with pytest.raises(ValidationError):
@@ -376,7 +379,8 @@ def test_movie_str(mock_id):
 
 def test_null_movie_title_raises_exception():
     with pytest.raises(TypeError):
-        Movie(None, Description('A description'), Year(2020), Category(Category.MovieCategory.ACTION), Director('A director'))
+        Movie(None, Description('A description'), Year(2020), Category(Category.MovieCategory.ACTION),
+              Director('A director'))
 
 
 def test_null_movie_description_raises_exception():
@@ -397,7 +401,6 @@ def test_null_movie_category_raises_exception():
 def test_null_movie_director_raises_exception():
     with pytest.raises(TypeError):
         Movie(Title('A title'), Description('A description'), Year(2020), Category(Category.MovieCategory.ACTION), None)
-
 
 
 ### Like ###
@@ -432,3 +435,98 @@ def test_invalid_like_raises_exception(values):
     with pytest.raises(TypeError):
         Like(valid_movie, values)
 
+
+### MovieDealer ###
+
+@pytest.fixture
+def movie_dealer():
+    yield MovieDealer()
+
+
+def test_signup_returns_correct_string_when_the_two_passwords_are_different(movie_dealer):
+    assert movie_dealer.sign_up(Username('username'), Email('cioa@ciao.com'), Password('A_p@ssw0rd'),
+                                Password('A_different_p@ssw0rd')) == "The two passwords are not the same."
+
+
+def test_signup_raises_exception_when_invalid_fields(movie_dealer):
+    with pytest.raises(ValidationError):
+        movie_dealer.sign_up(Username(''), Email('cioa@ciao.com'), Password('A_p@ssw0rd'), Password('A_p@ssw0rd'))
+
+
+def test_signup_returns_correct_string_when_registration_fails(movie_dealer):
+    with requests_mock.Mocker() as request_mock:
+        request_mock.post('http://localhost:8000/api/v1/auth/registration', status_code=400)
+        assert movie_dealer.sign_up(Username('username'), Email('cioa@ciao.com'), Password('A_p@ssw0rd'),
+                                    Password('A_p@ssw0rd')) == "Something went wrong during user registration"
+
+
+def test_signup_returns_correct_string_when_registration_succeeds(movie_dealer):
+    username = 'username'
+    with requests_mock.Mocker() as request_mock:
+        request_mock.post('http://localhost:8000/api/v1/auth/registration', status_code=204)
+        assert movie_dealer.sign_up(Username(username), Email('cioa@ciao.com'), Password('A_p@ssw0rd'),
+                                    Password('A_p@ssw0rd')) == f'Welcome in our app, {username}!'
+
+
+def test_signup_returns_correct_string_when_connection_error(movie_dealer):
+    with requests_mock.Mocker() as request_mock:
+        request_mock.post('http://localhost:8000/api/v1/auth/registration', exc=ConnectionError)
+        assert movie_dealer.sign_up(Username('username'), Email('cioa@ciao.com'), Password('A_p@ssw0rd'),
+                                    Password('A_p@ssw0rd')) == "Couldn't reach server..."
+
+
+# TESTING LOGIN
+
+def test_login_returns_token_when_successful(movie_dealer):
+    with requests_mock.Mocker() as request_mock:
+        request_mock.post('http://localhost:8000/api/v1/auth/login/', status_code=200,
+                          json={'key': 'token'})
+        assert movie_dealer.login(Username('username'), Password('A_p@ssw0rd')) == 'token'
+
+
+def test_login_returns_none_when_connection_error(movie_dealer):
+    with requests_mock.Mocker() as request_mock:
+        request_mock.post('http://localhost:8000/api/v1/auth/login/', exc=ConnectionError)
+        assert movie_dealer.login(Username('username'), Password('A_p@ssw0rd')) is None
+
+
+# TESTING LOGOUT
+
+def test_logout_returns_true_when_successful(movie_dealer):
+    with requests_mock.Mocker() as request_mock:
+        request_mock.post('http://localhost:8000/api/v1/auth/logout/', status_code=200)
+        assert movie_dealer.logout('token') is True
+
+
+def test_logout_returns_false_when_unsuccessful(movie_dealer):
+    with requests_mock.Mocker() as request_mock:
+        request_mock.post('http://localhost:8000/api/v1/auth/logout/', status_code=400)
+        assert movie_dealer.logout('token') is False
+
+
+# TESTING ADD LIKE
+
+def test_add_like_returns_true_when_successful(movie_dealer):
+    with requests_mock.Mocker() as request_mock:
+        request_mock.post('http://localhost:8000/api/v1/likes/', status_code=201)
+        assert movie_dealer.add_like('token', Id(1)) is True
+
+
+def test_add_like_returns_false_when_unsuccessful(movie_dealer):
+    with requests_mock.Mocker() as request_mock:
+        request_mock.post('http://localhost:8000/api/v1/likes/', status_code=400)
+        assert movie_dealer.add_like('token', Id(1)) is False
+
+
+# TESTING REMOVE LIKE
+
+def test_remove_like_returns_true_when_successful(movie_dealer):
+    with requests_mock.Mocker() as request_mock:
+        request_mock.delete('http://localhost:8000/api/v1/likes/by_movie/1/', status_code=204)
+        assert movie_dealer.remove_like('token', Id(1)) is True
+
+
+def test_remove_like_returns_false_when_unsuccessful(movie_dealer):
+    with requests_mock.Mocker() as request_mock:
+        request_mock.delete('http://localhost:8000/api/v1/likes/by_movie/1/', status_code=400)
+        assert movie_dealer.remove_like('token', Id(1)) is False
