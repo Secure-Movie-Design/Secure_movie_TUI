@@ -2,8 +2,22 @@ import getpass
 from typing import Any, Callable
 from typeguard import typechecked
 from valid8 import ValidationError
-from movie.menu import Entry, Menu,Description
+from movie.menu import Entry, Menu, Description
 from movie.domain import Email, Movie, MovieDealer, Password, Username
+
+
+# implementare add_like
+# implementare remove_like
+
+
+# implementare add_movie (admin) (5)
+# implementare remove_movie (admin) (6)
+# implementare edit_movie (admin) (7)
+
+# ???
+# implementare movie filtrati
+# implementare movie ordinati
+# implementare lista movie a cui l'utente ha messo like
 
 class App:
     def __init__(self):
@@ -13,7 +27,7 @@ class App:
             .with_entry(Entry.create('2', 'Login', on_selected=lambda: self.__login())) \
             .with_entry(Entry.create('3', 'Add like', on_selected=lambda: self.__addLike())) \
             .with_entry(Entry.create('4', 'Remove like', on_selected=lambda: self.__removeLike())) \
-            .with_entry(Entry.create('5', 'Log out', on_selected=lambda: self.__logout())) \
+            .with_entry(Entry.create('8', 'Log out', on_selected=lambda: self.__logout())) \
             .with_entry(Entry.create('0', 'Exit', on_selected=lambda: print('See you next time!'), is_exit=True)) \
             .build()
         self.__film_dealer = MovieDealer()
@@ -22,10 +36,9 @@ class App:
     def __sign_up(self):
         username = self.__read_from_input("insert username", Username)
         email = self.__read_from_input("insert email", Email)
-        password = self.__read_from_input("insert password", Password, password= True)
-        confirm_password = self.__read_from_input("insert password again",  Password, password= True)
-        print(self.__film_dealer.sign_up(username,email,password,confirm_password))
-
+        password = self.__read_from_input("insert password", Password, password=True)
+        confirm_password = self.__read_from_input("insert password again", Password, password=True)
+        print(self.__film_dealer.sign_up(username, email, password, confirm_password))
 
     def __login(self):
 
@@ -34,18 +47,20 @@ class App:
             return
 
         username = self.__read_from_input("insert username", Username)
-        password = self.__read_from_input("insert password", Password, password= True)
+        password = self.__read_from_input("insert password", Password, password=True)
         token = self.__film_dealer.login(username, password)
-        if token == None:
+        if token is None:
             print("Login failed!")
             return
-        self.__token = token 
+        self.__token = token
         print("Logged successfully!")
 
     def __addLike(self):
         pass
+
     def __removeLike(self):
         pass
+
     def __logout(self):
         pass
 
@@ -68,17 +83,17 @@ class App:
             except (TypeError, ValueError) as e:
                 self.__error(f'Invalid {prompt}.\n {e}')
 
-
     @staticmethod
     @typechecked
     def __error(error_message: str):
         print(error_message)
 
     def __is_logged(self):
-        return self.__token != None
+        return self.__token is not None
 
     def run(self):
         self.__menu.run()
+
 
 def main(name: str):
     if name == '__main__':
