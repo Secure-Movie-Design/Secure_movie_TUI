@@ -43,7 +43,7 @@ class App:
     def __list_movies(self):
         movies = self.__film_dealer.get_movies()
         if len(movies) == 0:
-            print('No movies found!')
+            print('No movies found...')
         else:
             self.__show_movies(movies)
 
@@ -55,6 +55,8 @@ class App:
         fmt = '{:4}\t{:40}\t{:25}\t{:15}\t{:4}'
 
         print()
+        sep()
+        print('ALL MOVIES')
         sep()
         print(fmt.format('ID', 'TITLE', 'DIRECTOR', 'CATEGORY', 'YEAR'))
         sep()

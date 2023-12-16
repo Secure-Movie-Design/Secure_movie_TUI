@@ -2,7 +2,7 @@ from datetime import datetime
 
 import pytest
 import requests_mock
-from requests.exceptions import ConnectionError
+from requests.exceptions import ConnectionError, JSONDecodeError
 from valid8 import ValidationError
 
 from movie.domain import Title, Description, Year, Category, Movie, Like, Email, Id, Password, Username, Director, \
@@ -530,3 +530,28 @@ def test_remove_like_returns_false_when_unsuccessful(movie_dealer):
     with requests_mock.Mocker() as request_mock:
         request_mock.delete('http://localhost:8000/api/v1/likes/by_movie/1/', status_code=400)
         assert movie_dealer.remove_like('token', Id(1)) is False
+
+
+# TESTING GET MOVIES
+
+
+@pytest.mark.parametrize('values', [
+[{'id': 1, 'title': 'A title', 'description': 'A description', 'year': 2020,
+                                'category': 'ACTION', 'director': 'A director'}],
+[{'id': 1, 'title': 'A title', 'description': 'A description', 'year': 2020,
+                                'category': 'ACTION', 'director': 'A director'},
+ {'id': 2, 'title': 'A title', 'description': 'A description', 'year': 2020,
+                                'category': 'ACTION', 'director': 'A director'}],
+[],
+])
+def test_get_movies_format(movie_dealer, values):
+    with requests_mock.Mocker() as request_mock:
+        request_mock.get('http://localhost:8000/api/v1/movies/', status_code=200,
+                         json=values)
+        assert movie_dealer.get_movies() == values
+
+
+def test_get_movies_returns_empty_list_when_request_fails(movie_dealer):
+    with requests_mock.Mocker() as request_mock:
+        request_mock.get('http://localhost:8000/api/v1/movies/', status_code=400)
+        assert movie_dealer.get_movies() == []

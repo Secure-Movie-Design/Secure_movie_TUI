@@ -315,7 +315,6 @@ class MovieDealer:
         else:
             return False
 
-
     def add_movie(self, key: str, title: Title, description: Description, year: Year, category: Category,
                   director: Director, image_url: ImageUrl):
         data = {
@@ -329,8 +328,8 @@ class MovieDealer:
         res = requests.post(url=f'{self.__api_server}/movies/', headers={'Authorization': f'Token {key}',
                                                                          'Content-Type': 'application/json'},
                             data=json.dumps(data))
-        #print("res: ", res)
-        #print("status code: ", res.status_code)
+        # print("res: ", res)
+        # print("status code: ", res.status_code)
         return res.status_code == 201
 
     @typechecked
