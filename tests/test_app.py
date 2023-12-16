@@ -255,3 +255,24 @@ def test_add_movie_prints_correctly_when_successful(mock_print, mock_input, app)
                     app.run()
                     mock_print.assert_any_call("Movie added successfully!")
                     mock_print.assert_called()
+# SHOW ALL MOVIES OPERATION TEST
+
+@patch('builtins.input', side_effect=['9', '0'])  # list movies -> terminazione programma
+@patch('builtins.print')
+def test_list_movies_prints_correctly_when_no_movies_found(mock_print, mock_input, app):
+    with patch.object(MovieDealer, 'get_movies', return_value=[]) as get_movies:
+        app.run()
+        mock_print.assert_any_call("No movies found...")
+        mock_print.assert_called()
+
+
+@patch('builtins.input', side_effect=['9', '0'])  # list movies -> terminazione programma
+@patch('builtins.print')
+def test_show_movies_prints_correctly(mock_print, mock_input, app):
+    with patch.object(MovieDealer, 'get_movies', return_value=[{"id": 1, "title": "title", "description": "description",
+                                                                "year": 2020, "category": "category",
+                                                                "image_url": "image_url",
+                                                                "director": "director"}]) as get_movies:
+        app.run()
+        mock_print.assert_any_call("ALL MOVIES")
+        mock_print.assert_any_call('{:4}\t{:40}\t{:25}\t{:15}\t{:4}'.format('ID', 'TITLE', 'DIRECTOR', 'CATEGORY', 'YEAR'))
