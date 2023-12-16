@@ -34,10 +34,34 @@ class App:
             .with_entry(Entry.create('6', 'Update movie', on_selected=lambda: self.__updateMovie())) \
             .with_entry(Entry.create('7', 'Remove movie', on_selected=lambda: self.__removeMovie())) \
             .with_entry(Entry.create('8', 'Log out', on_selected=lambda: self.__logout())) \
+            .with_entry(Entry.create('9', 'List movies', on_selected=lambda: self.__list_movies())) \
             .with_entry(Entry.create('0', 'Exit', on_selected=lambda: print('See you next time!'), is_exit=True)) \
             .build()
         self.__film_dealer = MovieDealer()
         self.__token = None
+
+    def __list_movies(self):
+        movies = self.__film_dealer.get_movies()
+        if len(movies) == 0:
+            print('No movies found!')
+        else:
+            self.__show_movies(movies)
+
+    @typechecked
+    def __show_movies(self, movies):
+        def sep():
+            print('-'*120)
+
+        fmt = '{:4}\t{:40}\t{:25}\t{:15}\t{:4}'
+
+        print()
+        sep()
+        print(fmt.format('ID', 'TITLE', 'DIRECTOR', 'CATEGORY', 'YEAR'))
+        sep()
+        for movie in movies:
+            print(fmt.format(movie['id'], movie['title'], movie['director'], movie['category'], movie['year']))
+        sep()
+        print()
 
     def __sign_up(self):
         username = self.__read_from_input("insert username", Username)
