@@ -1,13 +1,12 @@
 from datetime import datetime
-from unittest.mock import patch
 
 import pytest
-
-from movie.domain import Title, Description, Year, Category, Movie, Like, Email, Id, Password, Username, Director, \
-    MovieDealer
-from valid8 import ValidationError
 import requests_mock
 from requests.exceptions import ConnectionError
+from valid8 import ValidationError
+
+from movie.domain import Title, Description, Year, Category, Movie, Like, Email, Id, Password, Username, Director, \
+    MovieDealer, ImageUrl
 
 
 @pytest.fixture()
@@ -374,7 +373,8 @@ def test_movie_str(mock_id):
                           'Title: A title\n'
                           'Description: A description\n'
                           'Year: 2020\n'
-                          'Category: ACTION\n')
+                          'Category: ACTION\n'
+                          'Director: A director\n')
 
 
 def test_null_movie_title_raises_exception():

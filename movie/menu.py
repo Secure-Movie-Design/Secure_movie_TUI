@@ -9,7 +9,7 @@ from validation.regex import pattern
 
 @typechecked
 @dataclass(order=True, frozen=True)
-class Description:
+class MenuDescription:
     value: str
 
     def __post_init__(self):
@@ -35,20 +35,20 @@ class Key:
 @dataclass(frozen=True)
 class Entry:
     key: Key
-    description: Description
+    description: MenuDescription
     on_selected: Callable[[], None] = field(default=lambda: None)
     is_exit: bool = field(default=False)
 
     @staticmethod
     def create(key: str, description: str, on_selected: Callable[[], None] = lambda: None,
                is_exit: bool = False) -> 'Entry':
-        return Entry(Key(key), Description(description), on_selected, is_exit)
+        return Entry(Key(key), MenuDescription(description), on_selected, is_exit)
 
 
 @typechecked
 @dataclass(frozen=True)
 class Menu:
-    description: Description
+    description: MenuDescription
     auto_select: Callable[[], None] = field(default=lambda: None)
     __entries: List[Entry] = field(default_factory=list, repr=False, init=False)
     __key2entry: Dict[Key, Entry] = field(default_factory=dict, repr=False, init=False)
@@ -101,7 +101,7 @@ class Menu:
         __menu: Optional['Menu']
         __create_key = object()
 
-        def __init__(self, description: Description, auto_select: Callable[[], None] = lambda: None):
+        def __init__(self, description: MenuDescription, auto_select: Callable[[], None] = lambda: None):
             self.__menu = Menu(description, auto_select, self.__create_key)
 
         @staticmethod

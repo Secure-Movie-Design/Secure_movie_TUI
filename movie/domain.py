@@ -1,13 +1,14 @@
+import json
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum, unique
+
 import requests
 from requests.exceptions import ConnectionError
-
 from typeguard import typechecked
+from valid8 import validate
 
 from validation.dataclasses import validate_dataclass
-from valid8 import validate
 from validation.regex import pattern
 
 
@@ -119,6 +120,23 @@ class Director:
 
 @typechecked
 @dataclass(frozen=True, order=True)
+class ImageUrl:
+    value: str
+
+    def __post_init__(self):
+        validate_dataclass(self)
+        validate('value', self.value, max_len=200,
+                 custom=pattern(r'https://image\.tmdb\.org/t/p/w500/[a-zA-Z\d]{27}\.jpg'),
+                 help_msg="Image URL must be at most 200 characters long and "
+                          "must be an URL like this one: "
+                          "https://image.tmdb.org/t/p/w500/abcdefghiABCDEFGH0123456789.jpg")
+
+    def __str__(self) -> str:
+        return self.value
+
+
+@typechecked
+@dataclass(frozen=True, order=True)
 class Movie:
     id: Id
     title: Title
@@ -139,7 +157,8 @@ class Movie:
                 f"Title: {self.title}\n"
                 f"Description: {self.description}\n"
                 f"Year: {self.year}\n"
-                f"Category: {self.category}\n")
+                f"Category: {self.category}\n"
+                f"Director: {self.director}\n")
 
 
 @typechecked
@@ -221,6 +240,8 @@ class Username:
 class MovieDealer:
     __api_server = 'http://localhost:8000/api/v1'
 
+    categories_list = [cat.value for cat in Category.MovieCategory]
+
     @typechecked
     def sign_up(self, username: Username, email: Email, password: Password, confirm_password: Password):
         try:
@@ -270,6 +291,12 @@ class MovieDealer:
             return False
 
     @typechecked
+    def is_admin_user(self, key: str) -> bool:
+        res = requests.get(url=f'{self.__api_server}/movies/user-type/', headers={'Authorization': f'Token {key}'})
+        _json = res.json()
+        return _json['user-type'] == 'admin'
+
+    @typechecked
     def add_like(self, key: str, movie_id: Id) -> bool:
         res = requests.post(url=f'{self.__api_server}/likes/',
                             headers={'Authorization': f'Token {key}'},
@@ -287,3 +314,20 @@ class MovieDealer:
             return True
         else:
             return False
+
+    def add_movie(self, key: str, title: Title, description: Description, year: Year, category: Category,
+                  director: Director, image_url: ImageUrl):
+        data = {
+            'title': title.value,
+            'description': description.value,
+            'year': year.value,
+            'category': category.value.name,
+            'director': director.value,
+            'image_url': image_url.value
+        }
+        res = requests.post(url=f'{self.__api_server}/movies/', headers={'Authorization': f'Token {key}',
+                                                                         'Content-Type': 'application/json'},
+                            data=json.dumps(data))
+        #print("res: ", res)
+        #print("status code: ", res.status_code)
+        return res.status_code == 201

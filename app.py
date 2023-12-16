@@ -1,9 +1,12 @@
 import getpass
-from typing import Any, Callable
+from typing import Any, Callable, Tuple
+
 from typeguard import typechecked
 from valid8 import ValidationError
-from movie.menu import Entry, Menu, Description
-from movie.domain import Email, Movie, MovieDealer, Password, Username, Id
+
+from movie.domain import Email, MovieDealer, Password, Username, Id, Title, Description, Year, Category, Director, \
+    ImageUrl
+from movie.menu import Entry, Menu, MenuDescription
 
 
 # implementare add_like
@@ -21,12 +24,15 @@ from movie.domain import Email, Movie, MovieDealer, Password, Username, Id
 
 class App:
     def __init__(self):
-        self.__menu = Menu.Builder(Description('Secure Movie Application Command line'),
+        self.__menu = Menu.Builder(MenuDescription('Secure Movie Application Command line'),
                                    auto_select=lambda: print('Welcome to Secure Movie Design!')) \
             .with_entry(Entry.create('1', 'Sign up', on_selected=lambda: self.__sign_up())) \
             .with_entry(Entry.create('2', 'Login', on_selected=lambda: self.__login())) \
             .with_entry(Entry.create('3', 'Add like', on_selected=lambda: self.__addLike())) \
             .with_entry(Entry.create('4', 'Remove like', on_selected=lambda: self.__removeLike())) \
+            .with_entry(Entry.create('5', 'Add movie', on_selected=lambda: self.__addMovie())) \
+            .with_entry(Entry.create('6', 'Update movie', on_selected=lambda: self.__updateMovie())) \
+            .with_entry(Entry.create('7', 'Remove movie', on_selected=lambda: self.__removeMovie())) \
             .with_entry(Entry.create('8', 'Log out', on_selected=lambda: self.__logout())) \
             .with_entry(Entry.create('0', 'Exit', on_selected=lambda: print('See you next time!'), is_exit=True)) \
             .build()
@@ -81,6 +87,28 @@ class App:
         else:
             print(f"Couldn't remove like to the movie with id {movie_id}...")
 
+    def __addMovie(self):
+        if not self.__is_logged():
+            print("You must be logged to add a movie!")
+            return
+
+        elif not self.__film_dealer.is_admin_user(self.__token):
+            print("You must be admin to add a movie!")
+            return
+
+        result = self.__film_dealer.add_movie(self.__token, *self.__read_movie())
+
+        if result:
+            print("Movie added successfully!")
+        else:
+            print("Couldn't add the movie...")
+
+    def __updateMovie(self):
+        pass
+
+    def __removeMovie(self):
+        pass
+
     def __logout(self):
         if not self.__is_logged():
             print("You must be logged to logout!")
@@ -92,6 +120,40 @@ class App:
             self.__token = None
         else:
             print("Logout failed!")
+
+    def __read_movie(self) -> Tuple[Title, Description, Year, Category, Director, ImageUrl]:
+        title = self.__read_from_input('Title', Title)
+        description = self.__read_from_input('Description', Description)
+        year = self.__read_from_input('Year', Year, to_convert=True)
+        category = self.__read_category('Select a category (insert its number)')
+        director = self.__read_from_input('Director', Director)
+        image_url = self.__read_from_input('Image URL', ImageUrl)
+        return title, description, year, category, director, image_url
+
+    def __print_categories(self) -> None:
+        categories = self.__film_dealer.categories_list
+        print_sep = lambda: print('-' * 100)
+        print_sep()
+        fmt = '%3s %-30s'
+        print(fmt % ('#', 'CATEGORY'))
+        print_sep()
+        for index in range(len(categories)):
+            print(fmt % (index + 1, categories[index]))
+        print_sep()
+
+    @typechecked
+    def __read_category(self, prompt: str) -> Any:
+        while True:
+            try:
+                self.__print_categories()
+                line = ''
+                line = input(f'{prompt}: ').strip()
+                res = Category(Category.MovieCategory(self.__film_dealer.categories_list[int(line) - 1]))
+                return res
+            except ValidationError as e:
+                self.__error(f'Invalid {prompt}.\n {e.help_msg}')
+            except (TypeError, ValueError) as e:
+                self.__error(f'Invalid value type.')
 
     @typechecked
     def __read_from_input(self, prompt: str, builder: Callable, password: bool = False,
