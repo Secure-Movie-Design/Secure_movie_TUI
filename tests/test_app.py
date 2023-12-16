@@ -242,3 +242,16 @@ def test_add_movie_prints_correctly_when_not_admin_user(mock_print, mock_input, 
                 app.run()
                 mock_print.assert_any_call("You must be admin to add a movie!")
                 mock_print.assert_called()
+
+
+@patch('builtins.input', side_effect=['2', 'username', '5', 'title', 'film descr', '2020', 'WESTERN', 'Stanley Kubrick',
+                                      'https://image.tmdb.org/t/p/w500/6KErczPBROQty7QoIsaa6wJYXZi.jpg', '0'])  # add movie -> terminazione programma
+@patch('builtins.print')
+def test_add_movie_prints_correctly_when_successful(mock_print, mock_input, app):
+    with patch('getpass.getpass', side_effect=['Password43210wewe?']) as password:
+        with patch.object(MovieDealer, 'login', return_value="token") as login:
+            with patch.object(MovieDealer, 'is_admin_user', return_value=True) as is_admin_user:
+                with patch.object(MovieDealer, 'add_movie', return_value=True) as add_movie:
+                    app.run()
+                    mock_print.assert_any_call("Movie added successfully!")
+                    mock_print.assert_called()

@@ -2,6 +2,7 @@ import json
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum, unique
+from typing import List, Any
 
 import requests
 from requests.exceptions import ConnectionError
@@ -241,6 +242,7 @@ class MovieDealer:
     __api_server = 'http://localhost:8000/api/v1'
 
     categories_list = [cat.value for cat in Category.MovieCategory]
+    movie_fields = [('title', Title), ('description', Description), ('year', Year), ('category', Category), ('director', Director), ('image_url', ImageUrl)]
 
     @typechecked
     def sign_up(self, username: Username, email: Email, password: Password, confirm_password: Password):
@@ -315,9 +317,9 @@ class MovieDealer:
         else:
             return False
 
-
+    @typechecked
     def add_movie(self, key: str, title: Title, description: Description, year: Year, category: Category,
-                  director: Director, image_url: ImageUrl):
+                  director: Director, image_url: ImageUrl) -> bool:
         data = {
             'title': title.value,
             'description': description.value,
@@ -329,9 +331,17 @@ class MovieDealer:
         res = requests.post(url=f'{self.__api_server}/movies/', headers={'Authorization': f'Token {key}',
                                                                          'Content-Type': 'application/json'},
                             data=json.dumps(data))
-        #print("res: ", res)
-        #print("status code: ", res.status_code)
+        # print("res: ", res)
+        # print("status code: ", res.status_code)
         return res.status_code == 201
+
+    @typechecked
+    def update_movie(self, key: str, movie: Any):
+        res = requests.put(url=f'{self.__api_server}/movies/{movie["id"]}/',
+                           headers={'Authorization': f'Token {key}',
+                                    'Content-Type': 'application/json'},
+                           data=json.dumps(movie))
+        return res.status_code == 200
 
     @typechecked
     def get_movies(self):
@@ -341,3 +351,12 @@ class MovieDealer:
             return _json
         else:
             return []
+
+    @typechecked
+    def get_movie(self, movie_id: Id):
+        res = requests.get(url=f'{self.__api_server}/movies/{movie_id.value}/')
+        if res.status_code == 200:
+            _json = res.json()
+            return _json
+        else:
+            return None

@@ -1,11 +1,11 @@
 import getpass
-from typing import Any, Callable, Tuple
+from typing import Any, Callable, Tuple, List
 
 from typeguard import typechecked
 from valid8 import ValidationError
 
 from movie.domain import Email, MovieDealer, Password, Username, Id, Title, Description, Year, Category, Director, \
-    ImageUrl
+    ImageUrl, Movie
 from movie.menu import Entry, Menu, MenuDescription
 
 
@@ -50,7 +50,7 @@ class App:
     @typechecked
     def __show_movies(self, movies):
         def sep():
-            print('-'*120)
+            print('-' * 120)
 
         fmt = '{:4}\t{:40}\t{:25}\t{:15}\t{:4}'
 
@@ -128,7 +128,45 @@ class App:
             print("Couldn't add the movie...")
 
     def __updateMovie(self):
-        pass
+        if not self.__is_logged():
+            print("You must be logged to add a movie!")
+            return
+
+        elif not self.__film_dealer.is_admin_user(self.__token):
+            print("You must be admin to add a movie!")
+            return
+
+        self.__list_movies()
+        movie_id = self.__read_from_input("insert movie id", Id, to_convert=True)
+        movie = self.__get_movie_by_id(movie_id)
+
+        for f, c in self.__film_dealer.movie_fields:
+            print(f"Do you want to update {f}? (y to update, n to skip)")
+            if input().strip() == 'y':
+                if f == 'category':
+                    val = self.__read_category(f"Select a category (insert its number)")
+                    movie[f] = val.value.name
+                else:
+                    val = self.__read_from_input(f"insert new {f}", c)
+                    movie[f] = val.value
+
+        result = self.__film_dealer.update_movie(self.__token, movie)
+
+        if result:
+            print("Movie updated successfully!")
+        else:
+            print("Couldn't update the movie...")
+
+    def __get_movie_by_id(self, movie_id: Id):
+        movie = self.__film_dealer.get_movie(movie_id)
+        if movie is None:
+            self.__error(f"Movie with id {movie_id.value} not found!")
+            return
+
+        movie_to_print = Movie(Id(movie['id']), Title(movie['title']), Description(movie['description']),
+                               Year(movie['year']), Category(Category.MovieCategory[movie['category']]), Director(movie['director']))
+        print(movie_to_print)
+        return movie
 
     def __removeMovie(self):
         pass
@@ -154,9 +192,10 @@ class App:
         image_url = self.__read_from_input('Image URL', ImageUrl)
         return title, description, year, category, director, image_url
 
+    # TODO: check first categoriest prints
     def __print_categories(self) -> None:
         categories = self.__film_dealer.categories_list
-        print_sep = lambda: print('-' * 100)
+        print_sep = lambda: print('-' * 50)
         print_sep()
         fmt = '%3s %-30s'
         print(fmt % ('#', 'CATEGORY'))
@@ -174,8 +213,6 @@ class App:
                 line = input(f'{prompt}: ').strip()
                 res = Category(Category.MovieCategory(self.__film_dealer.categories_list[int(line) - 1]))
                 return res
-            except ValidationError as e:
-                self.__error(f'Invalid {prompt}.\n {e.help_msg}')
             except (TypeError, ValueError) as e:
                 self.__error(f'Invalid value type.')
 
