@@ -2,7 +2,7 @@ import json
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum, unique
-from typing import List, Any
+from typing import Any
 
 import requests
 from requests.exceptions import ConnectionError
@@ -331,8 +331,6 @@ class MovieDealer:
         res = requests.post(url=f'{self.__api_server}/movies/', headers={'Authorization': f'Token {key}',
                                                                          'Content-Type': 'application/json'},
                             data=json.dumps(data))
-        # print("res: ", res)
-        # print("status code: ", res.status_code)
         return res.status_code == 201
 
     @typechecked
@@ -342,6 +340,13 @@ class MovieDealer:
                                     'Content-Type': 'application/json'},
                            data=json.dumps(movie))
         return res.status_code == 200
+
+    @typechecked
+    def remove_movie(self, key: str, movie_id: Id) -> bool:
+        res = requests.delete(url=f'{self.__api_server}/movies/{movie_id.value}/',
+                              headers={'Authorization': f'Token {key}'})
+        return res.status_code == 204
+
 
     @typechecked
     def get_movies(self):

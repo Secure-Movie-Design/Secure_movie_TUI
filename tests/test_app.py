@@ -6,7 +6,7 @@ from getpass import getpass
 import requests_mock
 
 from app import App, main
-from movie.domain import MovieDealer
+from movie.domain import MovieDealer, Title, Movie, Description, Year, Director, Category, Id
 
 from movie.menu import Menu
 
@@ -16,6 +16,12 @@ from requests.exceptions import ConnectionError
 @pytest.fixture
 def app():
     yield App()
+
+
+@pytest.fixture
+def movie():
+    return Movie(Id(1), Title('A title'), Description('A description'), Year(2020),
+                 Category(Category.MovieCategory.ACTION), Director('A director'))
 
 
 @patch('builtins.input', side_effect=['1', 'username', 'emailwrong', 'email@libero.it', '0'])
@@ -225,6 +231,8 @@ def test_remove_like_prints_correctly_when_unsuccessful(mock_print, mock_input, 
                 mock_print.assert_called()
 
 
+# ADD MOVIE TEST
+
 @patch('builtins.input', side_effect=['5', '0'])  # add movie -> terminazione programma
 @patch('builtins.print')
 def test_add_movie_prints_correctly_when_not_logged_in(mock_print, mock_input, app):
@@ -244,8 +252,9 @@ def test_add_movie_prints_correctly_when_not_admin_user(mock_print, mock_input, 
                 mock_print.assert_called()
 
 
-@patch('builtins.input', side_effect=['2', 'username', '5', 'title', 'film descr', '2020', 'WESTERN', 'Stanley Kubrick',
-                                      'https://image.tmdb.org/t/p/w500/6KErczPBROQty7QoIsaa6wJYXZi.jpg', '0'])  # add movie -> terminazione programma
+@patch('builtins.input', side_effect=['2', 'username', '5', 'title', 'film descr', '2020', '12', 'Stanley Kubrick',
+                                      'https://image.tmdb.org/t/p/w500/6KErczPBROQty7QoIsaa6wJYXZi.jpg',
+                                      '0'])  # add movie -> terminazione programma
 @patch('builtins.print')
 def test_add_movie_prints_correctly_when_successful(mock_print, mock_input, app):
     with patch('getpass.getpass', side_effect=['Password43210wewe?']) as password:
@@ -255,6 +264,128 @@ def test_add_movie_prints_correctly_when_successful(mock_print, mock_input, app)
                     app.run()
                     mock_print.assert_any_call("Movie added successfully!")
                     mock_print.assert_called()
+
+
+@patch('builtins.input', side_effect=['2', 'username', '5', 'title', 'film descr', '2020', '12', 'Stanley Kubrick',
+                                      'https://image.tmdb.org/t/p/w500/6KErczPBROQty7QoIsaa6wJYXZi.jpg',
+                                      '0'])  # add movie -> terminazione programma
+@patch('builtins.print')
+def test_add_movie_prints_correctly_when_unsuccessful(mock_print, mock_input, app):
+    with patch('getpass.getpass', side_effect=['Password43210wewe?']) as password:
+        with patch.object(MovieDealer, 'login', return_value="token") as login:
+            with patch.object(MovieDealer, 'is_admin_user', return_value=True) as is_admin_user:
+                with patch.object(MovieDealer, 'add_movie', return_value=False) as add_movie:
+                    app.run()
+                    mock_print.assert_any_call("Couldn't add the movie...")
+                    mock_print.assert_called()
+
+
+# UPDATE MOVIE TEST
+
+@patch('builtins.input', side_effect=['6', '0'])  # update movie -> terminazione programma
+@patch('builtins.print')
+def test_update_movie_prints_correctly_when_not_logged_in(mock_print, mock_input, app):
+    app.run()
+    mock_print.assert_any_call("You must be logged to update a movie!")
+    mock_print.assert_called()
+
+
+@patch('builtins.input', side_effect=['2', 'username', '6', '0'])  # update movie -> terminazione programma
+@patch('builtins.print')
+def test_update_movie_prints_correctly_when_not_admin_user(mock_print, mock_input, app):
+    with patch('getpass.getpass', side_effect=['Password43210wewe?']) as password:
+        with patch.object(MovieDealer, 'login', return_value="token") as login:
+            with patch.object(MovieDealer, 'is_admin_user', return_value=False) as is_admin_user:
+                app.run()
+                mock_print.assert_any_call("You must be admin to update a movie!")
+                mock_print.assert_called()
+
+
+@patch('builtins.input', side_effect=['2', 'username', '6', '1', '0'])  # update movie -> terminazione programma
+@patch('builtins.print')
+def test_update_movie_prints_correctly_when_movie_not_found(mock_print, mock_input, app, movie):
+    with patch('getpass.getpass', side_effect=['Password43210wewe?']) as password:
+        with patch.object(MovieDealer, 'login', return_value="token") as login:
+            with patch.object(MovieDealer, 'is_admin_user', return_value=True) as is_admin_user:
+                with patch.object(MovieDealer, 'get_movie', return_value=None):
+                    app.run()
+                    mock_print.assert_any_call(f"Movie with id {movie.id} not found!")
+                    mock_print.assert_called()
+
+
+# @patch('builtins.input', side_effect=['2', 'username', '6', '1', 'y', 'new updated title',
+#                                       'n', 'n', 'n', 'n', 'n', '0'])  # update movie -> terminazione programma
+# @patch('builtins.print')
+# def test_update_movie_prints_correctly_when_successful(mock_print, mock_input, app, movie):
+#     with patch('getpass.getpass', side_effect=['Password43210wewe?']) as password:
+#         with patch.object(MovieDealer, 'login', return_value="token") as login:
+#             with patch.object(MovieDealer, 'is_admin_user', return_value=True) as is_admin_user:
+#                 with patch.object(MovieDealer, 'get_movie', return_value=movie):
+#                     with patch.object(MovieDealer, 'update_movie', return_value=True):
+#                         app.run()
+#                         mock_print.assert_any_call("Movie updated successfully!")
+#                         mock_print.assert_called()
+
+
+# REMOVE MOVIE TEST
+
+@patch('builtins.input', side_effect=['7', '0'])  # remove movie -> terminazione programma
+@patch('builtins.print')
+def test_remove_movie_prints_correctly_when_not_logged_in(mock_print, mock_input, app):
+    app.run()
+    mock_print.assert_any_call("You must be logged to remove a movie!")
+    mock_print.assert_called()
+
+
+@patch('builtins.input', side_effect=['2', 'username', '7', '0'])  # remove movie -> terminazione programma
+@patch('builtins.print')
+def test_remove_movie_prints_correctly_when_not_admin_user(mock_print, mock_input, app):
+    with patch('getpass.getpass', side_effect=['Password43210wewe?']) as password:
+        with patch.object(MovieDealer, 'login', return_value="token") as login:
+            with patch.object(MovieDealer, 'is_admin_user', return_value=False) as is_admin_user:
+                app.run()
+                mock_print.assert_any_call("You must be admin to remove a movie!")
+                mock_print.assert_called()
+
+
+@patch('builtins.input', side_effect=['2', 'username', '7', '1', '0'])  # remove movie -> terminazione programma
+@patch('builtins.print')
+def test_remove_movie_prints_correctly_when_movie_not_found(mock_print, mock_input, app, movie):
+    with patch('getpass.getpass', side_effect=['Password43210wewe?']) as password:
+        with patch.object(MovieDealer, 'login', return_value="token") as login:
+            with patch.object(MovieDealer, 'is_admin_user', return_value=True) as is_admin_user:
+                with patch.object(MovieDealer, 'get_movie', return_value=None):
+                    app.run()
+                    mock_print.assert_any_call(f"Movie with id {movie.id} not found!")
+                    mock_print.assert_called()
+
+
+@patch('builtins.input', side_effect=['2', 'username', '7', '1', '0'])  # remove movie -> terminazione programma
+@patch('builtins.print')
+def test_remove_movie_prints_correctly_when_successful(mock_print, mock_input, app, movie):
+    with patch('getpass.getpass', side_effect=['Password43210wewe?']) as password:
+        with patch.object(MovieDealer, 'login', return_value="token") as login:
+            with patch.object(MovieDealer, 'is_admin_user', return_value=True) as is_admin_user:
+                with patch.object(MovieDealer, 'get_movie', return_value=movie):
+                    with patch.object(MovieDealer, 'remove_movie', return_value=True):
+                        app.run()
+                        mock_print.assert_any_call("Movie removed successfully!")
+                        mock_print.assert_called()
+
+
+@patch('builtins.input', side_effect=['2', 'username', '7', '1', '0'])  # remove movie -> terminazione programma
+@patch('builtins.print')
+def test_remove_movie_prints_correctly_when_unsuccessful(mock_print, mock_input, app, movie):
+    with patch('getpass.getpass', side_effect=['Password43210wewe?']) as password:
+        with patch.object(MovieDealer, 'login', return_value="token") as login:
+            with patch.object(MovieDealer, 'is_admin_user', return_value=True) as is_admin_user:
+                with patch.object(MovieDealer, 'get_movie', return_value=movie):
+                    with patch.object(MovieDealer, 'remove_movie', return_value=False):
+                        app.run()
+                        mock_print.assert_any_call("Couldn't remove the movie...")
+                        mock_print.assert_called()
+
+
 # SHOW ALL MOVIES OPERATION TEST
 
 @patch('builtins.input', side_effect=['9', '0'])  # list movies -> terminazione programma
@@ -275,4 +406,5 @@ def test_show_movies_prints_correctly(mock_print, mock_input, app):
                                                                 "director": "director"}]) as get_movies:
         app.run()
         mock_print.assert_any_call("ALL MOVIES")
-        mock_print.assert_any_call('{:4}\t{:40}\t{:25}\t{:15}\t{:4}'.format('ID', 'TITLE', 'DIRECTOR', 'CATEGORY', 'YEAR'))
+        mock_print.assert_any_call(
+            '{:4}\t{:40}\t{:25}\t{:15}\t{:4}'.format('ID', 'TITLE', 'DIRECTOR', 'CATEGORY', 'YEAR'))

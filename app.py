@@ -131,16 +131,25 @@ class App:
 
     def __updateMovie(self):
         if not self.__is_logged():
-            print("You must be logged to add a movie!")
+            print("You must be logged to update a movie!")
             return
 
         elif not self.__film_dealer.is_admin_user(self.__token):
-            print("You must be admin to add a movie!")
+            print("You must be admin to update a movie!")
             return
 
         self.__list_movies()
         movie_id = self.__read_from_input("insert movie id", Id, to_convert=True)
-        movie = self.__get_movie_by_id(movie_id)
+        movie = self.__film_dealer.get_movie(movie_id)
+
+        if movie is None:
+            self.__error(f"Movie with id {movie_id.value} not found!")
+            return
+
+        movie_to_print = Movie(Id(movie['id']), Title(movie['title']), Description(movie['description']),
+                               Year(movie['year']), Category(Category.MovieCategory[movie['category']]),
+                               Director(movie['director']))
+        print(movie_to_print)
 
         for f, c in self.__film_dealer.movie_fields:
             print(f"Do you want to update {f}? (y to update, n to skip)")
@@ -159,19 +168,29 @@ class App:
         else:
             print("Couldn't update the movie...")
 
-    def __get_movie_by_id(self, movie_id: Id):
+    def __removeMovie(self):
+        if not self.__is_logged():
+            print("You must be logged to remove a movie!")
+            return
+
+        elif not self.__film_dealer.is_admin_user(self.__token):
+            print("You must be admin to remove a movie!")
+            return
+
+        self.__list_movies()
+        movie_id = self.__read_from_input("insert movie id", Id, to_convert=True)
         movie = self.__film_dealer.get_movie(movie_id)
+
         if movie is None:
             self.__error(f"Movie with id {movie_id.value} not found!")
             return
 
-        movie_to_print = Movie(Id(movie['id']), Title(movie['title']), Description(movie['description']),
-                               Year(movie['year']), Category(Category.MovieCategory[movie['category']]), Director(movie['director']))
-        print(movie_to_print)
-        return movie
+        result = self.__film_dealer.remove_movie(self.__token, movie_id)
 
-    def __removeMovie(self):
-        pass
+        if result:
+            print("Movie removed successfully!")
+        else:
+            print("Couldn't remove the movie...")
 
     def __logout(self):
         if not self.__is_logged():
@@ -194,7 +213,7 @@ class App:
         image_url = self.__read_from_input('Image URL', ImageUrl)
         return title, description, year, category, director, image_url
 
-    # TODO: check first categoriest prints
+    # TODO: check first categories prints
     def __print_categories(self) -> None:
         categories = self.__film_dealer.categories_list
         print_sep = lambda: print('-' * 50)

@@ -212,6 +212,48 @@ def test_director_type_raises_exception(values):
         Director(values)
 
 
+### ImageUrl ###
+def test_null_image_url_raises_exception():
+    with pytest.raises(TypeError):
+        ImageUrl(None)
+
+
+def test_image_url_str():
+    assert (str(ImageUrl('https://image.tmdb.org/t/p/w500/6KErczPBROQty7QoIsaa6wJYXZi.jpg')) ==
+            'https://image.tmdb.org/t/p/w500/6KErczPBROQty7QoIsaa6wJYXZi.jpg')
+
+
+def test_image_url_format():
+    assert (ImageUrl('https://image.tmdb.org/t/p/w500/6KErczPBROQty7QoIsaa6wJYXZi.jpg').value ==
+            'https://image.tmdb.org/t/p/w500/6KErczPBROQty7QoIsaa6wJYXZi.jpg')
+
+
+@pytest.mark.parametrize('values', [
+    1,
+    1.0,
+    True,
+    [],
+    {},
+    (),
+    object(),
+])
+def test_invalid_image_url_raises_exception(values):
+    with pytest.raises(TypeError):
+        ImageUrl(values)
+
+
+@pytest.mark.parametrize('values', [
+    'https://image.tmdb.org/t/p/w500/a.jpg',
+    'a',
+    '',
+    'https://image.tmdb.org/t/p/w500/6KErczPBROQty7QoIsaa6wJYXZi.jpg' + 'a' * 200,
+    'http://example.com'
+])
+def test_invalid_image_url_format_raises_exception(values):
+    with pytest.raises(ValidationError):
+        ImageUrl(values)
+
+
 ### Id ###
 def test_null_id_raises_exception():
     with pytest.raises(TypeError):
@@ -443,6 +485,18 @@ def movie_dealer():
     yield MovieDealer()
 
 
+@pytest.fixture
+def json_movie():
+    return {'id': 1, 'title': 'Title 1', 'description': 'ADescription 1', 'year': 2020, 'category': 'ACTION',
+            'director': 'A director', 'image_url': 'https://image.tmdb.org/t/p/w500/6KErczPBROQty7QoIsaa6wJYXZi.jpg'}
+
+
+@pytest.fixture
+def movie():
+    return (Title('A title'), Description('descr'), Year(2020), Category(Category.MovieCategory.ACTION),
+            Director('A director'), ImageUrl('https://image.tmdb.org/t/p/w500/6KErczPBROQty7QoIsaa6wJYXZi.jpg'))
+
+
 def test_signup_returns_correct_string_when_the_two_passwords_are_different(movie_dealer):
     assert movie_dealer.sign_up(Username('username'), Email('cioa@ciao.com'), Password('A_p@ssw0rd'),
                                 Password('A_different_p@ssw0rd')) == "The two passwords are not the same."
@@ -504,6 +558,22 @@ def test_logout_returns_false_when_unsuccessful(movie_dealer):
         assert movie_dealer.logout('token') is False
 
 
+# TESTING IS_ADMIN_USER
+
+def test_is_admin_user_returns_true_when_user_is_admin(movie_dealer):
+    with requests_mock.Mocker() as request_mock:
+        request_mock.get('http://localhost:8000/api/v1/movies/user-type/',
+                         json={'user-type': 'admin'})
+        assert movie_dealer.is_admin_user('token') is True
+
+
+def test_is_admin_user_returns_false_when_user_is_not_admin(movie_dealer):
+    with requests_mock.Mocker() as request_mock:
+        request_mock.get('http://localhost:8000/api/v1/movies/user-type/',
+                         json={'user-type': 'user'})
+        assert movie_dealer.is_admin_user('token') is False
+
+
 # TESTING ADD LIKE
 
 def test_add_like_returns_true_when_successful(movie_dealer):
@@ -536,13 +606,13 @@ def test_remove_like_returns_false_when_unsuccessful(movie_dealer):
 
 
 @pytest.mark.parametrize('values', [
-[{'id': 1, 'title': 'A title', 'description': 'A description', 'year': 2020,
-                                'category': 'ACTION', 'director': 'A director'}],
-[{'id': 1, 'title': 'A title', 'description': 'A description', 'year': 2020,
-                                'category': 'ACTION', 'director': 'A director'},
- {'id': 2, 'title': 'A title', 'description': 'A description', 'year': 2020,
-                                'category': 'ACTION', 'director': 'A director'}],
-[],
+    [{'id': 1, 'title': 'A title', 'description': 'A description', 'year': 2020,
+      'category': 'ACTION', 'director': 'A director'}],
+    [{'id': 1, 'title': 'A title', 'description': 'A description', 'year': 2020,
+      'category': 'ACTION', 'director': 'A director'},
+     {'id': 2, 'title': 'A title', 'description': 'A description', 'year': 2020,
+      'category': 'ACTION', 'director': 'A director'}],
+    [],
 ])
 def test_get_movies_format(movie_dealer, values):
     with requests_mock.Mocker() as request_mock:
@@ -555,3 +625,62 @@ def test_get_movies_returns_empty_list_when_request_fails(movie_dealer):
     with requests_mock.Mocker() as request_mock:
         request_mock.get('http://localhost:8000/api/v1/movies/', status_code=400)
         assert movie_dealer.get_movies() == []
+
+
+# TESTING ADD MOVIE
+
+def test_add_movie_returns_true_when_successful(movie_dealer, movie):
+    with requests_mock.Mocker() as request_mock:
+        request_mock.post('http://localhost:8000/api/v1/movies/', status_code=201)
+        assert movie_dealer.add_movie('token', *movie) is True
+
+
+def test_add_movie_raises_exception_with_invalid_movie(movie_dealer, movie):
+    with requests_mock.Mocker() as request_mock:
+        request_mock.post('http://localhost:8000/api/v1/movies/', status_code=400)
+        assert movie_dealer.add_movie('token', *movie) is False
+
+
+# TESTING UPDATE MOVIE
+
+def test_update_movie_returns_true_when_successful(movie_dealer, json_movie):
+    with requests_mock.Mocker() as request_mock:
+        request_mock.put(f'http://localhost:8000/api/v1/movies/{json_movie["id"]}/', status_code=200)
+        assert movie_dealer.update_movie('token', json_movie) is True
+
+
+def test_update_movie_returns_falsee_when_unsuccessful(movie_dealer, json_movie):
+    with requests_mock.Mocker() as request_mock:
+        request_mock.put(f'http://localhost:8000/api/v1/movies/{json_movie["id"]}/', status_code=400)
+        assert movie_dealer.update_movie('token', json_movie) is False
+
+
+# TESTING REMOVE MOVIE
+
+def test_remove_movie_returns_true_when_successful(movie_dealer):
+    with requests_mock.Mocker() as request_mock:
+        request_mock.delete(f'http://localhost:8000/api/v1/movies/1/', status_code=204)
+        assert movie_dealer.remove_movie('token', Id(1)) is True
+
+
+def test_remove_movie_returns_true_when_unsuccessful(movie_dealer, json_movie):
+    with requests_mock.Mocker() as request_mock:
+        request_mock.delete(f'http://localhost:8000/api/v1/movies/1/', status_code=400)
+        assert movie_dealer.remove_movie('token', Id(1)) is False
+
+
+# TESTING GET MOVIE BY ID
+
+
+def test_get_movie_by_id_returns_movie_when_successful(movie_dealer, json_movie):
+    with requests_mock.Mocker() as request_mock:
+        request_mock.get(f'http://localhost:8000/api/v1/movies/{json_movie["id"]}/', status_code=200,
+                         json=json_movie)
+        assert movie_dealer.get_movie(Id(json_movie["id"])) == json_movie
+
+
+def test_get_movie_by_id_returns_none_when_unsuccessful(movie_dealer, json_movie):
+    with requests_mock.Mocker() as request_mock:
+        request_mock.get(f'http://localhost:8000/api/v1/movies/{json_movie["id"]}/', status_code=400,
+                         json=json_movie)
+        assert movie_dealer.get_movie(Id(json_movie["id"])) is None
