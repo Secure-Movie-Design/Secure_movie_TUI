@@ -35,6 +35,7 @@ class App:
             .with_entry(Entry.create('7', 'Remove movie', on_selected=lambda: self.__removeMovie())) \
             .with_entry(Entry.create('8', 'Log out', on_selected=lambda: self.__logout())) \
             .with_entry(Entry.create('9', 'List movies', on_selected=lambda: self.__list_movies())) \
+            .with_entry(Entry.create('10', 'Sort by title', on_selected=lambda: self.__sortByTitle())) \
             .with_entry(Entry.create('0', 'Exit', on_selected=lambda: print('See you next time!'), is_exit=True)) \
             .build()
         self.__film_dealer = MovieDealer()
@@ -48,7 +49,7 @@ class App:
             self.__show_movies(movies)
 
     @typechecked
-    def __show_movies(self, movies):
+    def __show_movies(self, movies, title_str: str = 'ALL MOVIES'):
         def sep():
             print('-' * 120)
 
@@ -56,7 +57,7 @@ class App:
 
         print()
         sep()
-        print('ALL MOVIES')
+        print(title_str)
         sep()
         print(fmt.format('ID', 'TITLE', 'DIRECTOR', 'CATEGORY', 'YEAR'))
         sep()
@@ -204,6 +205,13 @@ class App:
         else:
             print("Logout failed!")
 
+    def __sortByTitle(self):
+        movies = self.__film_dealer.sort_movies_by_title()
+        if len(movies) == 0:
+            print('No movies found...')
+        else:
+            self.__show_movies(movies, title_str='MOVIES SORTED BY TITLE')
+
     def __read_movie(self) -> Tuple[Title, Description, Year, Category, Director, ImageUrl]:
         title = self.__read_from_input('Title', Title)
         description = self.__read_from_input('Description', Description)
@@ -222,7 +230,9 @@ class App:
         print(fmt % ('#', 'CATEGORY'))
         print_sep()
         for index in range(len(categories)):
-            print(fmt % (index + 1, categories[index]))
+            print(index)
+            print(categories[index])
+            print(fmt % (str(index + 1), categories[index]))
         print_sep()
 
     @typechecked

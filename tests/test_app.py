@@ -24,6 +24,12 @@ def movie():
                  Category(Category.MovieCategory.ACTION), Director('A director'))
 
 
+@pytest.fixture
+def movies():
+    return [Movie(Id(1), Title('A title'), Description('A description'), Year(2020), Category(Category.MovieCategory.ACTION), Director('A director')),
+            Movie(Id(2), Title('B title'), Description('A description'), Year(2020), Category(Category.MovieCategory.ACTION), Director('A director')),
+            Movie(Id(3), Title('C title'), Description('A description'), Year(2020), Category(Category.MovieCategory.ACTION), Director('A director'))]
+
 @patch('builtins.input', side_effect=['1', 'username', 'emailwrong', 'email@libero.it', '0'])
 @patch('builtins.print')
 def test_read_input_validation_error(mock_print, mock_input, app):
@@ -406,5 +412,26 @@ def test_show_movies_prints_correctly(mock_print, mock_input, app):
                                                                 "director": "director"}]) as get_movies:
         app.run()
         mock_print.assert_any_call("ALL MOVIES")
+        mock_print.assert_any_call(
+            '{:4}\t{:40}\t{:25}\t{:15}\t{:4}'.format('ID', 'TITLE', 'DIRECTOR', 'CATEGORY', 'YEAR'))
+
+
+# SORT MOVIES BY TITLE OPERATION TEST
+
+@patch('builtins.input', side_effect=['10', '0'])  # sort movies by title -> terminazione programma
+@patch('builtins.print')
+def test_sort_movies_by_title_prints_correctly_when_no_movies_found(mock_print, mock_input, app):
+    with patch.object(MovieDealer, 'sort_movies_by_title', return_value=[]) as get_movies:
+        app.run()
+        mock_print.assert_any_call("No movies found...")
+        mock_print.assert_called()
+
+
+@patch('builtins.input', side_effect=['10', '0'])  # list movies -> terminazione programma
+@patch('builtins.print')
+def test_show_movies__sorted_by_title_prints_correctly(mock_print, mock_input, app, movies):
+    with patch.object(MovieDealer, 'get_movies', return_value=movies) as get_movies:
+        app.run()
+        mock_print.assert_any_call('MOVIES SORTED BY TITLE')
         mock_print.assert_any_call(
             '{:4}\t{:40}\t{:25}\t{:15}\t{:4}'.format('ID', 'TITLE', 'DIRECTOR', 'CATEGORY', 'YEAR'))

@@ -684,3 +684,26 @@ def test_get_movie_by_id_returns_none_when_unsuccessful(movie_dealer, json_movie
         request_mock.get(f'http://localhost:8000/api/v1/movies/{json_movie["id"]}/', status_code=400,
                          json=json_movie)
         assert movie_dealer.get_movie(Id(json_movie["id"])) is None
+
+
+# TESTING GET MOVIES SORTED BY TITLE
+
+@pytest.mark.parametrize('values', [
+    [{'id': 1, 'title': 'A title', 'description': 'A description', 'year': 2020,
+      'category': 'ACTION', 'director': 'A director'}],
+    [{'id': 1, 'title': 'B title', 'description': 'A description', 'year': 2020,
+      'category': 'ACTION', 'director': 'A director'},
+     {'id': 2, 'title': 'C title', 'description': 'A description', 'year': 2020,
+      'category': 'ACTION', 'director': 'A director'}]
+])
+def test_get_movies_sorted_by_title_format(movie_dealer, values):
+    with requests_mock.Mocker() as request_mock:
+        request_mock.get('http://localhost:8000/api/v1/movies/sort-by-title/', status_code=200,
+                         json=values)
+        assert movie_dealer.sort_movies_by_title() == values
+
+
+def test_get_movies_sorted_by_title_returns_empty_list_when_request_fails(movie_dealer):
+    with requests_mock.Mocker() as request_mock:
+        request_mock.get('http://localhost:8000/api/v1/movies/sort-by-title/', status_code=400)
+        assert movie_dealer.sort_movies_by_title() == []

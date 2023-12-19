@@ -242,7 +242,8 @@ class MovieDealer:
     __api_server = 'http://localhost:8000/api/v1'
 
     categories_list = [cat.value for cat in Category.MovieCategory]
-    movie_fields = [('title', Title), ('description', Description), ('year', Year), ('category', Category), ('director', Director), ('image_url', ImageUrl)]
+    movie_fields = [('title', Title), ('description', Description), ('year', Year), ('category', Category),
+                    ('director', Director), ('image_url', ImageUrl)]
 
     @typechecked
     def sign_up(self, username: Username, email: Email, password: Password, confirm_password: Password):
@@ -334,7 +335,7 @@ class MovieDealer:
         return res.status_code == 201
 
     @typechecked
-    def update_movie(self, key: str, movie: Any):
+    def update_movie(self, key: str, movie: Any) -> bool:
         res = requests.put(url=f'{self.__api_server}/movies/{movie["id"]}/',
                            headers={'Authorization': f'Token {key}',
                                     'Content-Type': 'application/json'},
@@ -346,7 +347,6 @@ class MovieDealer:
         res = requests.delete(url=f'{self.__api_server}/movies/{movie_id.value}/',
                               headers={'Authorization': f'Token {key}'})
         return res.status_code == 204
-
 
     @typechecked
     def get_movies(self):
@@ -365,3 +365,11 @@ class MovieDealer:
             return _json
         else:
             return None
+
+    def sort_movies_by_title(self):
+        res = requests.get(url=f'{self.__api_server}/movies/sort-by-title/')
+        if res.status_code == 200:
+            _json = res.json()
+            return _json
+        else:
+            return []
