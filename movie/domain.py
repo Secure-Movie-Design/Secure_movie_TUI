@@ -366,8 +366,19 @@ class MovieDealer:
         else:
             return None
 
+    @typechecked
     def sort_movies_by_title(self):
         res = requests.get(url=f'{self.__api_server}/movies/sort-by-title/')
+        if res.status_code == 200:
+            _json = res.json()
+            return _json
+        else:
+            return []
+
+    @typechecked
+    def get_liked_movies(self, key: str):
+        res = requests.get(url=f'{self.__api_server}/movies/user_liked_movies/',
+                           headers={'Authorization': f'Token {key}'})
         if res.status_code == 200:
             _json = res.json()
             return _json

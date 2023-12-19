@@ -435,3 +435,45 @@ def test_show_movies__sorted_by_title_prints_correctly(mock_print, mock_input, a
         mock_print.assert_any_call('MOVIES SORTED BY TITLE')
         mock_print.assert_any_call(
             '{:4}\t{:40}\t{:25}\t{:15}\t{:4}'.format('ID', 'TITLE', 'DIRECTOR', 'CATEGORY', 'YEAR'))
+
+
+# LIST LIKED MOVIED OPERATION TEST
+
+@patch('builtins.input', side_effect=['11', '0'])  # remove movie -> terminazione programma
+@patch('builtins.print')
+def test_list_liked_movies_prints_correctly_when_not_logged_in(mock_print, mock_input, app):
+    app.run()
+    mock_print.assert_any_call("You must be logged to see your liked movies!")
+    mock_print.assert_called()
+
+
+@patch('builtins.input', side_effect=['2', 'username', '11',
+                                      '0'])  # login -> username -> remove like -> movie id -> terminazione programma
+@patch('builtins.print')
+def test_list_liked_movies_prints_correctly_when_successful(mock_print, mock_input, app):
+    with patch.object(MovieDealer, 'login', return_value="token") as login:
+        with patch('getpass.getpass', side_effect=['Password43210wewe?']) as password:
+            with patch.object(MovieDealer, 'get_liked_movies',
+                              return_value=[{"id": 1, "title": "title", "description": "description",
+                                                                        "year": 2020, "category": "category",
+                                                                        "image_url": "image_url",
+                                                                        "director": "director"}]) as get_liked_movies:
+                app.run()
+                mock_print.assert_any_call("USER LIKED MOVIES")
+                mock_print.assert_any_call(
+                    '{:4}\t{:40}\t{:25}\t{:15}\t{:4}'.format('ID', 'TITLE',
+                                                             'DIRECTOR', 'CATEGORY', 'YEAR'))
+
+
+@patch('builtins.input', side_effect=['2', 'username', '11',
+                                      '0'])  # login -> username -> remove like -> movie id -> terminazione programma
+@patch('builtins.print')
+def test_list_liked_movies_prints_correctly_when_unsuccessful(mock_print, mock_input, app):
+    with patch.object(MovieDealer, 'login', return_value="token") as login:
+        with patch('getpass.getpass', side_effect=['Password43210wewe?']) as password:
+            with patch.object(MovieDealer, 'get_liked_movies', return_value=[]) as get_liked_movies:
+                app.run()
+                mock_print.assert_any_call("No movies found...")
+                mock_print.assert_called()
+
+

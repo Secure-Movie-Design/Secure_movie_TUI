@@ -36,6 +36,7 @@ class App:
             .with_entry(Entry.create('8', 'Log out', on_selected=lambda: self.__logout())) \
             .with_entry(Entry.create('9', 'List movies', on_selected=lambda: self.__list_movies())) \
             .with_entry(Entry.create('10', 'Sort by title', on_selected=lambda: self.__sortByTitle())) \
+            .with_entry(Entry.create('11', 'List liked movies', on_selected=lambda: self.__list_liked_movies())) \
             .with_entry(Entry.create('0', 'Exit', on_selected=lambda: print('See you next time!'), is_exit=True)) \
             .build()
         self.__film_dealer = MovieDealer()
@@ -211,6 +212,17 @@ class App:
             print('No movies found...')
         else:
             self.__show_movies(movies, title_str='MOVIES SORTED BY TITLE')
+
+    def __list_liked_movies(self):
+        if not self.__is_logged():
+            print("You must be logged to see your liked movies!")
+            return
+
+        movies = self.__film_dealer.get_liked_movies(self.__token)
+        if len(movies) == 0:
+            print('No movies found...')
+        else:
+            self.__show_movies(movies, title_str='USER LIKED MOVIES')
 
     def __read_movie(self) -> Tuple[Title, Description, Year, Category, Director, ImageUrl]:
         title = self.__read_from_input('Title', Title)

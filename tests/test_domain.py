@@ -707,3 +707,27 @@ def test_get_movies_sorted_by_title_returns_empty_list_when_request_fails(movie_
     with requests_mock.Mocker() as request_mock:
         request_mock.get('http://localhost:8000/api/v1/movies/sort-by-title/', status_code=400)
         assert movie_dealer.sort_movies_by_title() == []
+
+
+# TESTING GET USER LIKED MOVIES
+
+@pytest.mark.parametrize('values', [
+    [{'id': 1, 'title': 'A title 1', 'description': 'A description 1', 'year': 2021,
+      'category': 'ACTION', 'director': 'A director 1'}],
+    [{'id': 2, 'title': 'B title 2', 'description': 'A description 2', 'year': 2022,
+      'category': 'ADVENTURE', 'director': 'A director 2'},
+     {'id': 3, 'title': 'C title 3', 'description': 'A description 3', 'year': 2023,
+      'category': 'WESTERN', 'director': 'A director 3'}],
+    [],
+])
+def test_get_user_liked_movies_format(movie_dealer, values):
+    with requests_mock.Mocker() as request_mock:
+        request_mock.get('http://localhost:8000/api/v1/movies/user_liked_movies/', status_code=200,
+                         json=values)
+        assert movie_dealer.get_liked_movies('token') == values
+
+
+def test_get_user_liked_movies_returns_empty_list_when_request_fails(movie_dealer):
+    with requests_mock.Mocker() as request_mock:
+        request_mock.get('http://localhost:8000/api/v1/movies/user_liked_movies/', status_code=400)
+        assert movie_dealer.get_liked_movies('token') == []
