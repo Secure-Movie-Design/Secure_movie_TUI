@@ -8,20 +8,6 @@ from movie.domain import Email, MovieDealer, Password, Username, Id, Title, Desc
     ImageUrl, Movie
 from movie.menu import Entry, Menu, MenuDescription
 
-
-# implementare add_like
-# implementare remove_like
-
-
-# implementare add_movie (admin) (5)
-# implementare remove_movie (admin) (6)
-# implementare edit_movie (admin) (7)
-
-# ???
-# implementare movie filtrati
-# implementare movie ordinati
-# implementare lista movie a cui l'utente ha messo like
-
 class App:
     def __init__(self):
         self.__menu = Menu.Builder(MenuDescription('Secure Movie Application Command line'),
@@ -33,10 +19,10 @@ class App:
             .with_entry(Entry.create('5', 'Add movie', on_selected=lambda: self.__addMovie())) \
             .with_entry(Entry.create('6', 'Update movie', on_selected=lambda: self.__updateMovie())) \
             .with_entry(Entry.create('7', 'Remove movie', on_selected=lambda: self.__removeMovie())) \
-            .with_entry(Entry.create('8', 'Log out', on_selected=lambda: self.__logout())) \
+            .with_entry(Entry.create('8', 'List liked movies', on_selected=lambda: self.__list_liked_movies())) \
             .with_entry(Entry.create('9', 'List movies', on_selected=lambda: self.__list_movies())) \
             .with_entry(Entry.create('10', 'Sort by title', on_selected=lambda: self.__sortByTitle())) \
-            .with_entry(Entry.create('11', 'List liked movies', on_selected=lambda: self.__list_liked_movies())) \
+            .with_entry(Entry.create('12', 'Log out', on_selected=lambda: self.__logout())) \
             .with_entry(Entry.create('0', 'Exit', on_selected=lambda: print('See you next time!'), is_exit=True)) \
             .build()
         self.__film_dealer = MovieDealer()

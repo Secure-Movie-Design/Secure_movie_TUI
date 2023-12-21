@@ -20,8 +20,7 @@ def app():
 
 @pytest.fixture
 def movie():
-    return Movie(Id(1), Title('A title'), Description('A description'), Year(2020),
-                 Category(Category.MovieCategory.ACTION), Director('A director'))
+    return {"id": 1, "title": "A title", "description": "A description", "year": 2020, "category": "ACTION", "director": "A director", "image_url": "https://image.tmdb.org/t/p/w500/eQ4GRmP0EEkxjwlPbZlVn7HLoZp.jpg"}
 
 
 @pytest.fixture
@@ -140,7 +139,7 @@ def test_login_fail(mock_print, mock_input, app):
 
 # LOGOUT OPERATION TEST
 
-@patch('builtins.input', side_effect=['2', 'username', '8', '0'])  # login -> logout -> terminazione programma
+@patch('builtins.input', side_effect=['2', 'username', '12', '0'])  # login -> logout -> terminazione programma
 @patch('builtins.print')
 def test_logout_prints_correctly_when_logout_successful(mock_print, mock_input, app):
     with patch.object(MovieDealer, 'logout', return_value=True) as logout:
@@ -151,7 +150,7 @@ def test_logout_prints_correctly_when_logout_successful(mock_print, mock_input, 
                 mock_print.assert_called()
 
 
-@patch('builtins.input', side_effect=['8', '0'])  # logout -> terminazione programma
+@patch('builtins.input', side_effect=['12', '0'])  # logout -> terminazione programma
 @patch('builtins.print')
 def test_logout_prints_correctly_when_not_logged_in(mock_print, mock_input, app):
     app.run()
@@ -159,7 +158,7 @@ def test_logout_prints_correctly_when_not_logged_in(mock_print, mock_input, app)
     mock_print.assert_called()
 
 
-@patch('builtins.input', side_effect=['2', 'username', '8', '0'])  # login -> logout -> terminazione programma
+@patch('builtins.input', side_effect=['2', 'username', '12', '0'])  # login -> logout -> terminazione programma
 @patch('builtins.print')
 def test_logout_prints_correctly_when_logout_fails(mock_print, mock_input, app):
     with patch.object(MovieDealer, 'logout', return_value=False) as logout:
@@ -315,22 +314,22 @@ def test_update_movie_prints_correctly_when_movie_not_found(mock_print, mock_inp
             with patch.object(MovieDealer, 'is_admin_user', return_value=True) as is_admin_user:
                 with patch.object(MovieDealer, 'get_movie', return_value=None):
                     app.run()
-                    mock_print.assert_any_call(f"Movie with id {movie.id} not found!")
+                    mock_print.assert_any_call(f"Movie with id {movie['id']} not found!")
                     mock_print.assert_called()
 
 
-# @patch('builtins.input', side_effect=['2', 'username', '6', '1', 'y', 'new updated title',
-#                                       'n', 'n', 'n', 'n', 'n', '0'])  # update movie -> terminazione programma
-# @patch('builtins.print')
-# def test_update_movie_prints_correctly_when_successful(mock_print, mock_input, app, movie):
-#     with patch('getpass.getpass', side_effect=['Password43210wewe?']) as password:
-#         with patch.object(MovieDealer, 'login', return_value="token") as login:
-#             with patch.object(MovieDealer, 'is_admin_user', return_value=True) as is_admin_user:
-#                 with patch.object(MovieDealer, 'get_movie', return_value=movie):
-#                     with patch.object(MovieDealer, 'update_movie', return_value=True):
-#                         app.run()
-#                         mock_print.assert_any_call("Movie updated successfully!")
-#                         mock_print.assert_called()
+@patch('builtins.input', side_effect=['2', 'username', '6', '1', 'y', 'new updated title', 'n', 'n', 'n', 'n', 'n', '0'])  # update movie -> terminazione programma
+@patch('builtins.print')
+def test_update_movie_prints_correctly_when_successful(mock_print, mock_input, app, movie):
+     with patch('getpass.getpass', side_effect=['Password43210wewe?']) as password:
+         with patch.object(MovieDealer, 'login', return_value="token") as login:
+             with patch.object(MovieDealer, 'is_admin_user', return_value=True) as is_admin_user:
+                 with patch.object(MovieDealer, 'get_movie', return_value=movie):
+                     with patch.object(MovieDealer, 'update_movie', return_value=True):
+                         app.run()
+                         assert is_admin_user.called
+                         mock_print.assert_any_call("Movie updated successfully!")
+                         mock_print.assert_called()
 
 
 # REMOVE MOVIE TEST
@@ -362,7 +361,7 @@ def test_remove_movie_prints_correctly_when_movie_not_found(mock_print, mock_inp
             with patch.object(MovieDealer, 'is_admin_user', return_value=True) as is_admin_user:
                 with patch.object(MovieDealer, 'get_movie', return_value=None):
                     app.run()
-                    mock_print.assert_any_call(f"Movie with id {movie.id} not found!")
+                    mock_print.assert_any_call(f"Movie with id {movie['id']} not found!")
                     mock_print.assert_called()
 
 
@@ -439,7 +438,7 @@ def test_show_movies__sorted_by_title_prints_correctly(mock_print, mock_input, a
 
 # LIST LIKED MOVIED OPERATION TEST
 
-@patch('builtins.input', side_effect=['11', '0'])  # remove movie -> terminazione programma
+@patch('builtins.input', side_effect=['8', '0'])  # remove movie -> terminazione programma
 @patch('builtins.print')
 def test_list_liked_movies_prints_correctly_when_not_logged_in(mock_print, mock_input, app):
     app.run()
@@ -447,7 +446,7 @@ def test_list_liked_movies_prints_correctly_when_not_logged_in(mock_print, mock_
     mock_print.assert_called()
 
 
-@patch('builtins.input', side_effect=['2', 'username', '11',
+@patch('builtins.input', side_effect=['2', 'username', '8',
                                       '0'])  # login -> username -> remove like -> movie id -> terminazione programma
 @patch('builtins.print')
 def test_list_liked_movies_prints_correctly_when_successful(mock_print, mock_input, app):
@@ -465,7 +464,7 @@ def test_list_liked_movies_prints_correctly_when_successful(mock_print, mock_inp
                                                              'DIRECTOR', 'CATEGORY', 'YEAR'))
 
 
-@patch('builtins.input', side_effect=['2', 'username', '11',
+@patch('builtins.input', side_effect=['2', 'username', '8',
                                       '0'])  # login -> username -> remove like -> movie id -> terminazione programma
 @patch('builtins.print')
 def test_list_liked_movies_prints_correctly_when_unsuccessful(mock_print, mock_input, app):
