@@ -124,7 +124,7 @@ class App:
             print("You must be logged to update a movie!")
             return
 
-        elif not self.__film_dealer.is_admin_user(self.__token):
+        if not self.__film_dealer.is_admin_user(self.__token):
             print("You must be admin to update a movie!")
             return
 
@@ -133,7 +133,7 @@ class App:
         movie = self.__film_dealer.get_movie(movie_id)
 
         if movie is None:
-            self.__error(f"Movie with id {movie_id.value} not found!")
+            print(f"Movie with id {movie_id.value} not found!")
             return
 
         movie_to_print = Movie(Id(movie['id']), Title(movie['title']), Description(movie['description']),
@@ -172,7 +172,7 @@ class App:
         movie = self.__film_dealer.get_movie(movie_id)
 
         if movie is None:
-            self.__error(f"Movie with id {movie_id.value} not found!")
+            print(f"Movie with id {movie_id.value} not found!")
             return
 
         result = self.__film_dealer.remove_movie(self.__token, movie_id)
