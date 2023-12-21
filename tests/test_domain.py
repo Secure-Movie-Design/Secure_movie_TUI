@@ -731,3 +731,26 @@ def test_get_user_liked_movies_returns_empty_list_when_request_fails(movie_deale
     with requests_mock.Mocker() as request_mock:
         request_mock.get('http://localhost:8000/api/v1/movies/user_liked_movies/', status_code=400)
         assert movie_dealer.get_liked_movies('token') == []
+
+
+# TESTING GET MOVIES FILTERED BY DIRECTOR
+
+@pytest.mark.parametrize('values', [
+    [{'id': 1, 'title': 'A title A', 'description': 'A description A', 'year': 2021,
+      'category': 'ACTION', 'director': 'A director A'}],
+    [{'id': 2, 'title': 'B title B', 'description': 'A description B', 'year': 2022,
+      'category': 'ADVENTURE', 'director': 'A director A'},
+     {'id': 3, 'title': 'C title C', 'description': 'A description C', 'year': 2023,
+      'category': 'WESTERN', 'director': 'A director A'}],
+    [],
+])
+def test_get_movies_filtered_by_director_format(movie_dealer, values):
+    with requests_mock.Mocker() as request_mock:
+        request_mock.get('http://localhost:8000/api/v1/movies/filter-by-director/A director A/', status_code=200,
+                         json=values)
+        assert movie_dealer.filter_movies_by_director(Director('A director A')) == values
+
+def test_get_movies_filtered_by_director_returns_empty_list_when_request_fails(movie_dealer):
+    with requests_mock.Mocker() as request_mock:
+        request_mock.get('http://localhost:8000/api/v1/movies/filter-by-director/A director A/', status_code=400)
+        assert movie_dealer.filter_movies_by_director(Director('A director A')) == []

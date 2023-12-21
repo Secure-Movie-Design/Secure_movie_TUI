@@ -1,5 +1,5 @@
 import getpass
-from typing import Any, Callable, Tuple, List
+from typing import Any, Callable, Tuple
 
 from typeguard import typechecked
 from valid8 import ValidationError
@@ -7,6 +7,7 @@ from valid8 import ValidationError
 from movie.domain import Email, MovieDealer, Password, Username, Id, Title, Description, Year, Category, Director, \
     ImageUrl, Movie
 from movie.menu import Entry, Menu, MenuDescription
+
 
 class App:
     def __init__(self):
@@ -22,6 +23,7 @@ class App:
             .with_entry(Entry.create('8', 'List liked movies', on_selected=lambda: self.__list_liked_movies())) \
             .with_entry(Entry.create('9', 'List movies', on_selected=lambda: self.__list_movies())) \
             .with_entry(Entry.create('10', 'Sort by title', on_selected=lambda: self.__sortByTitle())) \
+            .with_entry(Entry.create('11', 'Filter by director', on_selected=lambda: self.__filter_by_director())) \
             .with_entry(Entry.create('12', 'Log out', on_selected=lambda: self.__logout())) \
             .with_entry(Entry.create('0', 'Exit', on_selected=lambda: print('See you next time!'), is_exit=True)) \
             .build()
@@ -212,6 +214,14 @@ class App:
             print('No movies found...')
         else:
             self.__show_movies(movies, title_str='USER LIKED MOVIES')
+
+    def __filter_by_director(self):
+        director = self.__read_from_input("insert director", Director)
+        movies = self.__film_dealer.filter_movies_by_director(director)
+        if len(movies) == 0:
+            print('No movies found...')
+        else:
+            self.__show_movies(movies, title_str='MOVIES FILTERED BY DIRECTOR')
 
     def __read_movie(self) -> Tuple[Title, Description, Year, Category, Director, ImageUrl]:
         title = self.__read_from_input('Title', Title)

@@ -383,3 +383,12 @@ class MovieDealer:
             return _json
         else:
             return []
+
+    @typechecked
+    def filter_movies_by_director(self, director: Director):
+        res = requests.get(url=f'{self.__api_server}/movies/filter-by-director/{director.value}/')
+        if res.status_code == 200:
+            _json = res.json()
+            return _json
+        else:
+            return []

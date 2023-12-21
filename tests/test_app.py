@@ -476,3 +476,22 @@ def test_list_liked_movies_prints_correctly_when_unsuccessful(mock_print, mock_i
                 mock_print.assert_called()
 
 
+# FILTER MOVIES BY DIRECTOR OPERATION TEST
+
+@patch('builtins.input', side_effect=['11', 'A director', '0'])  # filter movies by director -> terminazione programma
+@patch('builtins.print')
+def test_filter_movies_by_director_prints_correctly_when_no_movies_found(mock_print, mock_input, app):
+    with patch.object(MovieDealer, 'filter_movies_by_director', return_value=[]) as filter_movies_by_director:
+        app.run()
+        mock_print.assert_any_call("No movies found...")
+        mock_print.assert_called()
+
+
+@patch('builtins.input', side_effect=['11', 'A director', '0'])  # filter movies by director -> terminazione programma
+@patch('builtins.print')
+def test_filter_movies_by_director_prints_correctly_when_successful(mock_print, mock_input, app, movies):
+    with patch.object(MovieDealer, 'filter_movies_by_director', return_value=movies) as filter_movies_by_director:
+        app.run()
+        mock_print.assert_any_call('MOVIES FILTERED BY DIRECTOR')
+        mock_print.assert_any_call(
+            '{:4}\t{:40}\t{:25}\t{:15}\t{:4}'.format('ID', 'TITLE', 'DIRECTOR', 'CATEGORY', 'YEAR'))
