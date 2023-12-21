@@ -93,6 +93,7 @@ class App:
         if not self.__is_logged():
             print("You must be logged to add like!")
             return
+        self.__list_movies()
 
         movie_id = self.__read_from_input("insert movie id", Id, to_convert=True)
         result = self.__film_dealer.add_like(self.__token, movie_id)
@@ -106,6 +107,8 @@ class App:
         if not self.__is_logged():
             print("You must be logged to remove like!")
             return
+
+        self.__list_liked_movies()
 
         movie_id = self.__read_from_input("insert movie id", Id, to_convert=True)
         result = self.__film_dealer.remove_like(self.__token, movie_id)
@@ -233,7 +236,6 @@ class App:
         image_url = self.__read_from_input('Image URL', ImageUrl)
         return title, description, year, category, director, image_url
 
-    # TODO: check first categories prints
     def __print_categories(self) -> None:
         categories = self.__film_dealer.categories_list
         print_sep = lambda: print('-' * 50)
@@ -242,8 +244,6 @@ class App:
         print(fmt % ('#', 'CATEGORY'))
         print_sep()
         for index in range(len(categories)):
-            print(index)
-            print(categories[index])
             print(fmt % (str(index + 1), categories[index]))
         print_sep()
 

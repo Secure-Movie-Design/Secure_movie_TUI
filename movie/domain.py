@@ -73,9 +73,9 @@ class Id:
 class Category:
     @unique  # Enum class decorator that ensures only one name is bound to any one value.
     class MovieCategory(Enum):
-        ROMANCE = "ROMANCE",
-        ACTION = "ACTION",
-        ADVENTURE = "ADVENTURE",
+        ROMANCE = "ROMANCE"
+        ACTION = "ACTION"
+        ADVENTURE = "ADVENTURE"
         COMEDY = "COMEDY"
         CRIME = "CRIME"
         DRAMA = "DRAMA"
@@ -98,7 +98,6 @@ class Category:
     def __str__(self) -> str:
         return self.value.name
 
-    # todo: da testare
     @typechecked
     def _is_a_valid_category(self, value) -> bool:
         return value in self.MovieCategory.__members__.values()
